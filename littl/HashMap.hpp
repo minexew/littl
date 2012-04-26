@@ -1,0 +1,290 @@
+/*
+    Copyright (C) 2011 Xeatheran Minexew
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in
+    all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+    THE SOFTWARE.
+*/
+
+#pragma once
+
+#include <littl/Allocator.hpp>
+
+namespace li
+{
+    template<typename Key, typename Value, typename Hash = uint32_t, Hash ( *getHash )( const Key& ) = Key::getHash, typename Size = uint32_t>
+    class HashMap
+    {
+        protected:
+            struct Pair;
+
+            class Iterator
+            {
+                HashMap<Key, Value, Hash, getHash, Size>& hashMap;
+                Size bucket, i;
+
+                void adjust()
+                {
+                    while ( bucket < hashMap.numBuckets && i >= hashMap.buckets[bucket].numEntries )
+                    {
+                        i = 0;
+                        bucket++;
+                    }
+                }
+
+                public:
+                    Iterator( HashMap<Key, Value, Hash, getHash, Size>& hashMap ) : hashMap( hashMap ), bucket( 0 ), i( 0 )
+                    {
+                        adjust();
+                    }
+
+                    operator Pair&() { return hashMap.buckets[bucket].entries[i]; }
+                    Value& operator -> () { return hashMap.buckets[bucket].entries[i].value; }
+                    Pair& operator * () { return hashMap.buckets[bucket].entries[i]; }
+                    void operator ++() { i++; adjust(); }
+
+                    bool isValid() const { return bucket < hashMap.numBuckets && i < hashMap.buckets[bucket].numEntries; }
+            };
+
+            struct Pair
+            {
+                Key key;
+                Value value;
+                Hash hash;
+            };
+
+            struct Bucket
+            {
+                Pair* entries;
+                Size numEntries, capacity;
+            };
+
+            Bucket* buckets;
+            Size numBuckets, numEntries, shiftAmount;
+
+            static void releaseBuckets( Bucket* buckets, Size numBuckets );
+
+        public:
+            HashMap( Size shiftAmount = 2 );
+            ~HashMap();
+
+            void clear();
+            Value* find( const Key& key );
+            Value get( const Key& key ) const;
+            Iterator getIterator() { return Iterator( *this ); }
+            void printStatistics();
+            void resize( Size shiftAmount, bool lazy = false );
+            Value* set( Key&& key, Value&& value );
+    };
+
+#define __li_member( type ) template<typename Key, typename Value, typename Hash, Hash ( *getHash )( const Key& ), typename Size> type HashMap<Key, Value, Hash, getHash, Size>::
+#define __li_member_ template<typename Key, typename Value, typename Hash, Hash ( *getHash )( const Key& ), typename Size> HashMap<Key, Value, Hash, getHash, Size>::
+
+    __li_member_ HashMap( Size shiftAmount )
+            : buckets( nullptr ), numBuckets( 0 ), numEntries( 0 ), shiftAmount( 0 )
+    {
+        resize( shiftAmount );
+    }
+
+    __li_member_ ~HashMap()
+    {
+        clear();
+    }
+
+    __li_member( void ) clear()
+    {
+        releaseBuckets( buckets, numBuckets );
+
+        buckets = nullptr;
+        numBuckets = 0;
+        numEntries = 0;
+        shiftAmount = 0;
+    }
+
+    __li_member( Value* ) find( const Key& key )
+    {
+        Hash hash = getHash( key );
+        Bucket& bucket = buckets[hash & ( numBuckets - 1 )];
+
+        //printf( "HashMap.find(): Hash = %08X, bucket = %u\n", hash, hash & ( numBuckets - 1 ) );
+
+        for ( Size i = 0; i < bucket.numEntries; i++ )
+            if ( bucket.entries[i].hash == hash && bucket.entries[i].key == key )
+                return &bucket.entries[i].value;
+
+        return nullptr;
+    }
+
+    __li_member( Value ) get( const Key& key ) const
+    {
+        Hash hash = getHash( key );
+        Bucket& bucket = buckets[hash & ( numBuckets - 1 )];
+
+        for ( Size i = 0; i < bucket.numEntries; i++ )
+            if ( bucket.entries[i].hash == hash && bucket.entries[i].key == key )
+                return bucket.entries[i].value;
+
+        return 0;
+    }
+
+    __li_member( void ) printStatistics()
+    {
+        printf( "HashMap: %" PRIuPTR " buckets (shift = %" PRIuPTR "); %" PRIuPTR " entries\n", ( size_t ) this->numBuckets, ( size_t ) this->shiftAmount, ( size_t ) this->numEntries );
+
+        for ( Size i = 0; i < numBuckets; i++ )
+        {
+            const Bucket& bucket = buckets[i];
+
+            printf( "  - bucket #%04X (%" PRIuPTR "/%" PRIuPTR " entries)\n", ( uint16_t ) i, ( size_t ) bucket.numEntries, ( size_t ) bucket.capacity );
+
+            for ( Size j = 0; j < bucket.numEntries; j++ )
+                printf( "      - entry #%" PRIuPTR " (hash = %08X)\n", ( size_t ) j, bucket.entries[j].hash );
+        }
+    }
+
+    __li_member( void ) releaseBuckets( Bucket* buckets, Size numBuckets )
+    {
+        for ( Size i = 0; i < numBuckets; i++ )
+        {
+            Bucket& bucket = buckets[i];
+
+            for ( Size j = 0; j < bucket.numEntries; j++ )
+            {
+                destructPointer( &bucket.entries[j].key );
+                destructPointer( &bucket.entries[j].value );
+                destructPointer( &bucket.entries[j].hash );
+            }
+
+            Allocator<Pair>::release( bucket.entries );
+        }
+
+        Allocator<Bucket>::release( buckets );
+    }
+
+    __li_member( void ) resize( Size shiftAmount, bool lazy )
+    {
+        if ( shiftAmount == this->shiftAmount )
+            return;
+
+        Size numBuckets = ( 1 << shiftAmount );
+
+        if ( lazy && numBuckets < this->numBuckets )
+            return;
+
+        if ( buckets == nullptr )
+        {
+            buckets = Allocator<Bucket>::allocate( numBuckets );
+
+            for ( Size i = 0; i < numBuckets; i++ )
+            {
+                buckets[i].entries = nullptr;
+                buckets[i].numEntries = 0;
+                buckets[i].capacity = 0;
+            }
+
+            this->numBuckets = numBuckets;
+            this->shiftAmount = shiftAmount;
+        }
+        else
+        {
+            // Allocate new bucket array
+            Bucket* buckets = Allocator<Bucket>::allocate( numBuckets );
+
+            // Init the new bucket array (we're starting from scratch)
+            for ( Size i = 0; i < numBuckets; i++ )
+            {
+                buckets[i].entries = nullptr;
+                buckets[i].numEntries = 0;
+                buckets[i].capacity = 0;
+            }
+
+            // Now re-insert the original entries using the already computed hashes
+            for ( Size i = 0; i < this->numBuckets; i++ )
+            {
+                Bucket& sourceBucket = this->buckets[i];
+
+                for ( Size j = 0; j < sourceBucket.numEntries; j++ )
+                {
+                    Hash hash = sourceBucket.entries[j].hash;
+                    Bucket& bucket = buckets[hash & ( numBuckets - 1 )];
+
+                    if ( bucket.numEntries + 1 >= bucket.capacity )
+                    {
+                        Size newCapacity = ( bucket.capacity == 0 ) ? 2 : bucket.capacity * 2;
+                        bucket.entries = Allocator<Pair>::resize( bucket.entries, newCapacity );
+                        bucket.capacity = newCapacity;
+                    }
+
+                    constructPointer( &bucket.entries[bucket.numEntries].key, ( Key&& ) sourceBucket.entries[j].key );
+                    constructPointer( &bucket.entries[bucket.numEntries].value, ( Value&& ) sourceBucket.entries[j].value );
+                    constructPointer( &bucket.entries[bucket.numEntries].hash, ( Hash&& ) sourceBucket.entries[j].hash );
+
+                    bucket.numEntries++;
+                }
+            }
+
+            releaseBuckets( this->buckets, this->numBuckets );
+
+            this->buckets = buckets;
+            this->numBuckets = numBuckets;
+            this->shiftAmount = shiftAmount;
+        }
+    }
+
+    __li_member( Value* ) set( Key&& key, Value&& value )
+    {
+        //printf( "HashMap.set(): %u entries, %u buckets (%u/%u)\n", numEntries, numBuckets, numEntries, numBuckets * 4 );
+
+        Value* entry = find( key );
+
+        if ( entry != nullptr )
+        {
+            *entry = ( Value&& ) value;
+            return entry;
+        }
+
+        if ( numEntries + 1 > numBuckets * 4 )
+            resize( shiftAmount + 2, false );
+
+        Hash hash = getHash( key );
+        Bucket& bucket = buckets[hash & ( numBuckets - 1 )];
+
+        //printf( "HashMap.add(): Hash = %08X, bucket = %u\n", hash, hash & ( numBuckets - 1 ) );
+
+        if ( bucket.numEntries + 1 >= bucket.capacity )
+        {
+            Size newCapacity = ( bucket.capacity == 0 ) ? 2 : bucket.capacity * 2;
+
+            //printf( "HashMap.add(): resizing bucket %u -> %u\n", bucket.capacity, newCapacity );
+
+            bucket.entries = Allocator<Pair>::resize( bucket.entries, newCapacity );
+            bucket.capacity = newCapacity;
+        }
+
+        constructPointer( &bucket.entries[bucket.numEntries].key, ( Key&& ) key );
+        constructPointer( &bucket.entries[bucket.numEntries].value, ( Value&& ) value );
+        constructPointer( &bucket.entries[bucket.numEntries].hash, ( Hash&& ) hash );
+
+        bucket.numEntries++;
+        numEntries++;
+
+        return &bucket.entries[bucket.numEntries - 1].value;
+    }
+
+#undef __li_member
+#undef __li_member_
+}
