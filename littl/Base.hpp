@@ -15,6 +15,8 @@
 
 // VS don't have no cinttypes
 #include <inttypes.h>
+#elif __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 7)
+#include <inttypes.h>
 #else
 #include <cinttypes>
 #include <unistd.h>
@@ -23,6 +25,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <ctime>
 #include <stdint.h>
 #include <typeinfo>
 
@@ -34,7 +37,6 @@
 #define li_MSW
 #define li_newLine "\r\n"
 #define li_stricmp _stricmp
-#include <ctime>
 #else
 #define __li_POSIX
 #define li_newLine "\n"
@@ -384,4 +386,6 @@ namespace li
 #error "littl: No case-inpendent string compare (stricmp/strcasecmp) function available"
 #endif
     }
+    
+    static inline void throwException(const char* functionName, const char* name, const char* description);
 }

@@ -96,4 +96,9 @@ namespace li
                 saved.description = description;
             }
     };
+    
+    inline void throwException(const char* functionName, const char* name, const char* description)
+    {
+        throw Exception(functionName, name, description);
+    }
 }

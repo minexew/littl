@@ -57,7 +57,7 @@ namespace li
     	    T current() { return iterableGetItem( iterator ); }
     };
 
-    template<typename T, typename TLength = size_t, class IAllocator = Allocator<T>>
+    template<typename T, typename TLength = size_t, class IAllocator = Allocator<T> >
     class List : public __li_base, public Iterable<T&, TLength>
     {
         protected:
@@ -274,7 +274,7 @@ namespace li
 
     #define __li_base List<Reference<T>, TLength, IAllocator>
 
-    template<typename T, typename TLength = size_t, class IAllocator = Allocator<Reference<T>>>
+    template<typename T, typename TLength = size_t, class IAllocator = Allocator<Reference<T> > >
     class ReferenceList : public __li_base
     {
         public:

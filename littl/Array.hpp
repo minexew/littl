@@ -27,8 +27,6 @@
 
 namespace li
 {
-    class Exception;
-
     template<typename T, typename TCapacity = size_t, class IAllocator = Allocator<T> >
     class Array
     {
@@ -127,7 +125,7 @@ namespace li
     __li_member( const T& ) get( TCapacity field ) const
     {
         if ( field >= capacity )
-            throw Exception( "ArrayOutOfBounds" );
+            throwException("li.Array.get(const)", "IndexOutOfBounds", "Specified index is outside array bounds");
 
         return data[field];
     }

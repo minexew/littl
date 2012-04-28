@@ -401,7 +401,7 @@ namespace li
             operator_append_num( unsigned, "%u" )
             operator_append_num( long, "%li" )
             operator_append_num( unsigned long, "%lu" )
-            operator_append_num( long long, "%I64i" )
+            operator_append_num( long long, "%" PRIi64 )
             operator_append_num( float, "%g" )
             operator_append_num( double, "%g" )
 
