@@ -25,7 +25,7 @@
 #include <littl/Base.hpp>
 
 #ifndef __li_MSW
-#error NOT IMPLEMENTED FOR OTHER PLATFORMS THAN WINNT (yet)
+#include <pthread.h>
 #endif
 
 namespace li
@@ -35,11 +35,7 @@ namespace li
     {
         bool running;
         void ( *threadFunction )( ParamType );
-#ifdef __li_MSW
-        HANDLE threadHandle;
-        DWORD threadId;
-        int priority;
-
+        
         struct ThreadStartInfo
         {
             ThreadLauncher* launcher;
@@ -48,6 +44,11 @@ namespace li
             ParamType param;
         }
         info;
+        
+#ifdef __li_MSW
+        HANDLE threadHandle;
+        DWORD threadId;
+        int priority;
 
         static DWORD threadStartRoutine( ThreadStartInfo* info )
         {
@@ -58,6 +59,18 @@ namespace li
                 info->exitFunction( info->param );
 
             return 0;
+        }
+#else
+        pthread_t thread;
+        
+        static void* threadStartRoutine(void *userarg)
+        {
+            ThreadStartInfo* info = (ThreadStartInfo *) userarg;
+            
+            info->threadFunction(info->param);
+            info->launcher->running = false;
+            
+            return NULL;
         }
 #endif
 
@@ -79,11 +92,14 @@ namespace li
 #define __li_member_ template<typename ParamType> ThreadLauncher<ParamType>::
 
     __li_member_ ThreadLauncher( void ( *run )( ParamType param ) )
-        : running( false ), threadFunction( run ), priority( THREAD_PRIORITY_NORMAL )
+        : running( false ), threadFunction( run )
     {
 #ifdef __li_MSW
         threadHandle = INVALID_HANDLE_VALUE;
         threadId = 0;
+        priority = THREAD_PRIORITY_NORMAL;
+#else
+        thread = 0;
 #endif
     }
 
@@ -105,16 +121,19 @@ namespace li
             threadHandle = INVALID_HANDLE_VALUE;
             return true;
         }
+#else
+        return 0 == pthread_cancel(thread);
 #endif
-        return false;
     }
 
     __li_member( void ) setPriority( int priority )
     {
+#ifdef __li_MSW
         this->priority = priority;
 
         if ( threadHandle != INVALID_HANDLE_VALUE )
             SetThreadPriority( threadHandle, priority );
+#endif
     }
 
     __li_member( bool ) start( ParamType param, void ( *exitFunction )( ParamType ) )
@@ -122,16 +141,31 @@ namespace li
         if ( running )
             return false;
 
-#ifdef __li_MSW
         info.launcher = this;
         info.threadFunction = threadFunction;
         info.exitFunction = exitFunction;
         info.param = param;
+        
+#ifdef __li_MSW
+        running = true;
         threadHandle = CreateThread( 0, 0, ( LPTHREAD_START_ROUTINE )( threadStartRoutine ), &info, 0, &threadId );
         setPriority( priority );
-        return running = ( threadHandle != INVALID_HANDLE_VALUE );
+        if ( threadHandle == INVALID_HANDLE_VALUE )
+        {
+            running = false;
+            return false;
+        }
+        else
+            return true;
 #else
-        return false;
+        running = true;
+        if (0 != pthread_create(&thread, NULL, threadStartRoutine, &info))
+        {
+            running = false;
+            return false;
+        }
+        else
+            return true;
 #endif
     }
 
@@ -142,8 +176,9 @@ namespace li
             return false;
         else
             return !WaitForSingleObject( threadHandle, time < 0 ? INFINITE : time );
+#else
+        return 0 == pthread_join(thread, NULL);
 #endif
-        return false;
     }
 
 #undef __li_member
@@ -152,6 +187,7 @@ namespace li
     class Thread
     {
         public:
+#ifdef __li_MSW
             enum Priority
             {
                 lowest = THREAD_PRIORITY_LOWEST,
@@ -160,6 +196,16 @@ namespace li
                 aboveNormal = THREAD_PRIORITY_ABOVE_NORMAL,
                 highest = THREAD_PRIORITY_HIGHEST
             };
+#else
+            enum Priority
+            {
+                lowest,
+                belowNormal,
+                normal,
+                aboveNormal,
+                highest
+            };
+#endif
 
         private:
             ThreadLauncher<Thread*> launcher;
@@ -271,27 +317,47 @@ namespace li
 
     class Mutex
     {
+#ifdef __li_MSW
         CRITICAL_SECTION criticalSection;
+#else
+        pthread_mutex_t mutex;
+#endif
 
         public:
             Mutex()
             {
+#ifdef __li_MSW
                 InitializeCriticalSection( &criticalSection );
+#else
+                pthread_mutex_init(&mutex, NULL);
+#endif
             }
 
             ~Mutex()
             {
+#ifdef __li_MSW
                 DeleteCriticalSection( &criticalSection );
+#else
+                pthread_mutex_destroy(&mutex);
+#endif
             }
 
             void enter()
             {
+#ifdef __li_MSW
                 EnterCriticalSection( &criticalSection );
+#else
+                pthread_mutex_lock(&mutex);
+#endif
             }
 
             void leave()
             {
+#ifdef __li_MSW
                 LeaveCriticalSection( &criticalSection );
+#else
+                pthread_mutex_unlock(&mutex);
+#endif
             }
     };
 

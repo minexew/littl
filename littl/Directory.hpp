@@ -31,6 +31,7 @@
 #include <windows.h>
 #else
 #include <dirent.h>
+#include <sys/stat.h>
 #endif
 
 namespace li
@@ -71,6 +72,15 @@ namespace li
             }
 #endif
 
+            static bool create(const char *name)
+            {
+#ifdef __li_MSW
+                return CreateDirectoryA(name, NULL);
+#else
+                return mkdir(name, 0755) == 0;
+#endif
+            }
+        
             void list( List<String>& items )
             {
 #ifdef __li_MSW
@@ -121,7 +131,14 @@ namespace li
                     FindClose( find );
                 }
 #else
-#error          NOT IMPLEMENTED
+                rewinddir( dir );
+                
+                dirent* ent;
+                
+                while ( ( ent = readdir( dir ) ) )
+                {
+                    Entry entry = { ent->d_name, false /*isDirectory*/, 0 /* size */};
+                }
 #endif
             }
 
