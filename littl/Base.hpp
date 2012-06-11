@@ -16,6 +16,7 @@
 // VS don't have no cinttypes
 #include <inttypes.h>
 #elif __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 7)
+#define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 #else
 #include <cinttypes>
