@@ -2,6 +2,8 @@
 #pragma once
 
 #include <confix2.h>
+
+#include <littl/BaseIO.hpp>
 #include <littl/List.hpp>
 
 namespace cfx2
@@ -254,6 +256,13 @@ namespace cfx2
             bool isOk() const
             {
                 return node != nullptr && lastError == cfx2_ok;
+            }
+        
+            void loadFrom(li::SeekableInputStream* input)
+            {
+                cfx2_release_node_2( &node );
+
+                cfx2_read_from_string(input->readWhole(), &node);
             }
 
             bool save( const char* fileName )
