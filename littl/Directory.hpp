@@ -75,7 +75,7 @@ namespace li
             static bool create(const char *name)
             {
 #ifdef __li_MSW
-                return CreateDirectoryA(name, NULL);
+                return (CreateDirectoryA(name, NULL) != FALSE);
 #else
                 return mkdir(name, 0755) == 0;
 #endif
