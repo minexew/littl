@@ -270,6 +270,20 @@ namespace cfx2
                 return cfx2_save_document( node, fileName ) == cfx2_ok;
             }
 
+            bool save( li::OutputStream* stream )
+            {
+                char* text = nullptr;
+                size_t capacity = 0, used = 0;
+
+                cfx2_write_to_buffer(node, &text, &capacity, &used);
+
+                stream->write(text, used);
+
+                free(text);
+
+                return true;
+            }
+
             Document& operator = ( Node other )
             {
                 cfx2_release_node_2( &node );

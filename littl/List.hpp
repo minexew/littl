@@ -80,6 +80,7 @@ namespace li
 
                     size_t getIndex() const { return i; }
                     bool isValid() const { return i >= 0 && ( size_t ) i < list.getLength(); }
+                    void remove() { list.remove(i--); }
 
                     Iterator& operator = ( T&& value )
                     {
