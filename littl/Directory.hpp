@@ -138,6 +138,7 @@ namespace li
                 while ( ( ent = readdir( dir ) ) )
                 {
                     Entry entry = { ent->d_name, false /*isDirectory*/, 0 /* size */};
+                    entries.add(entry);
                 }
 #endif
             }
