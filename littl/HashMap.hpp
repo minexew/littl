@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2011 Xeatheran Minexew
+    Copyright (C) 2011, 2012 Xeatheran Minexew
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -89,6 +89,7 @@ namespace li
             void printStatistics();
             void resize( Size shiftAmount, bool lazy = false );
             Value* set( Key&& key, Value&& value );
+            bool unset( Key&& key );
     };
 
 #define __li_member( type ) template<typename Key, typename Value, typename Hash, Hash ( *getHash )( const Key& ), typename Size> type HashMap<Key, Value, Hash, getHash, Size>::
@@ -285,6 +286,29 @@ namespace li
         return &bucket.entries[bucket.numEntries - 1].value;
     }
 
+    __li_member( bool ) unset( Key&& key )
+    {
+        Hash hash = getHash( key );
+        Bucket& bucket = buckets[hash & ( numBuckets - 1 )];
+        
+        for ( Size i = 0; i < bucket.numEntries; i++ )
+            if ( bucket.entries[i].hash == hash && bucket.entries[i].key == key )
+            {
+                destructPointer( &bucket.entries[i].key );
+                destructPointer( &bucket.entries[i].value );
+                destructPointer( &bucket.entries[i].hash );
+                
+                memmove(&bucket.entries[i], &bucket.entries[i + 1], (bucket.numEntries - i - 1) * sizeof(Pair));
+                
+                bucket.numEntries--;
+                numEntries--;
+                
+                return true;
+            }
+        
+        return false;
+    }
+    
 #undef __li_member
 #undef __li_member_
 }
