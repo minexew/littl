@@ -178,7 +178,7 @@ namespace li
 #else
                 struct stat st; 
 
-                if ( stat( filename, &st ) == 0 )
+                if ( stat( fileName, &st ) == 0 )
                 {
                     fileSize = st.st_size;
                     return true;
