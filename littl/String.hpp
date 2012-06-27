@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2010, 2011 Xeatheran Minexew
+    Copyright (C) 2010, 2011, 2012 Xeatheran Minexew
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -195,7 +195,9 @@ namespace li
             static StringTpl<blockSize> formatBool( bool value, bool useText = false );
             static StringTpl<blockSize> formatFloat( float value, int width = -1 );
             static StringTpl<blockSize> formatInt( int value, int width = -1, Base base = decimal );
+            char* getBuffer() { return data; }
             Utf8Char getChar( size_t& index ) const;
+            StringTpl<blockSize> getFiltered( int (* filter)( int c ) ) const;
 
             static uint32_t getHash( const char* string );
             static uint32_t getHash( const StringTpl& string ) { return getHash( string.c_str() ); }
@@ -1028,6 +1030,25 @@ namespace li
 
         output[chars] = 0;
         return chars;
+    }
+
+    __li_member( StringTpl<blockSize> ) getFiltered( int (* filter)( int c ) ) const
+    {
+        StringTpl result;
+
+        size_t index = 0;
+
+        while ( true )
+        {
+            Utf8Char next = getChar( index );
+
+            if ( next == Utf8::invalidChar )
+                return result;
+            else
+                result.append( Utf8Character( filter( next ) ) );
+        }
+
+        return result;
     }
 
     __li_member( uint64_t ) parseUnsigned( const char* text, Base base )

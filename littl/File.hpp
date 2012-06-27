@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2008-2011 Xeatheran Minexew
+    Copyright (c) 2008-2012 Xeatheran Minexew
 
     This software is provided 'as-is', without any express or implied
     warranty. In no event will the authors be held liable for any damages
@@ -27,6 +27,10 @@
 #include <littl/Exception.hpp>
 #include <littl/FileName.hpp>
 #include <littl/String.hpp>
+
+#ifndef __li_MSW
+#include <sys/stat.h>
+#endif
 
 namespace li
 {
@@ -77,6 +81,17 @@ namespace li
                     return nullptr;
 
                 return new File( handle );
+            }
+
+            static bool copy( const char* from, const char* to )
+            {
+                Reference<File> source = File::open( from );
+                Reference<File> dest = File::open( to, true );
+
+                if ( !li::isReadable( source ) || !li::isWritable( dest ) )
+                    return false;
+
+                return dest->copyFrom( source ) == source->getSize();
             }
 
             static String formatFileName( const char* fileName )
@@ -147,6 +162,32 @@ namespace li
                 return handle != 0;
             }
 
+            static bool queryFileSize( const char* fileName, uint64_t& fileSize )
+            {
+#ifdef __li_MSW
+                // TODO: Unicode filename support
+                HANDLE hFile = CreateFileA(fileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
+                if (hFile == INVALID_HANDLE_VALUE)
+                    return false;
+
+                LARGE_INTEGER li;
+                GetFileSizeEx(hFile, &li);
+                fileSize = li.QuadPart;
+                return true;
+#else
+                struct stat st; 
+
+                if ( stat( filename, &st ) == 0 )
+                {
+                    fileSize = st.st_size;
+                    return true;
+                }
+
+                return false;
+#endif
+            }
+
             virtual size_t rawRead( void* out, size_t readSize )
             {
                 return fread( out, 1, readSize, handle );
@@ -197,6 +238,16 @@ namespace li
                 return File( fileName ).readLines( list );
             }
 
+            static bool load( const char* fileName, void* data, size_t length )
+            {
+                File file( fileName, "rb" );
+
+                if ( file.handle == nullptr )
+                    return false;
+
+                return file.read( data, length ) == length;
+            }
+
             static bool save( const char* fileName, const String& text )
             {
                 File file( fileName, "wb" );
@@ -205,6 +256,16 @@ namespace li
                     return false;
 
                 return file.write( text.c_str(), text.getNumBytes() ) == text.getNumBytes();
+            }
+
+            static bool save( const char* fileName, const void* data, size_t length )
+            {
+                File file( fileName, "wb" );
+
+                if ( file.handle == nullptr )
+                    return false;
+
+                return file.write( data, length ) == length;
             }
     };
 }

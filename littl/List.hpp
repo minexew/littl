@@ -136,6 +136,11 @@ namespace li
                 return length++;
             }
 
+            T& addEmpty()
+            {
+                return this->get( length++ );
+            }
+
             TLength addUnsafe( const T& item )
             {
                 this->getUnsafe( length ) = item;
@@ -258,6 +263,17 @@ namespace li
                     }
 
                 return false;
+            }
+
+            void setLength( size_t length, bool lazy = false )
+            {
+                this->resize(length, lazy);
+                this->length = length;
+            }
+
+            void setLengthUnsafe( size_t length )
+            {
+                this->length = length;
             }
 
     	    List<T>& operator = ( const List<T>& other )

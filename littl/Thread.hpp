@@ -28,7 +28,7 @@
 #include <pthread.h>
 #endif
 
-#define li_synchronizedBlock(mutex_) CriticalSection li_cs_((mutex_));
+#define li_synchronized(mutex_) CriticalSection li_cs_((mutex_));
 
 namespace li
 {

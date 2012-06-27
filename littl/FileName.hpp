@@ -56,6 +56,16 @@ namespace li
                 return path.leftPart( offset );
             }
 
+            String getExtension() const
+            {
+                int offset = path.findLastChar( '.' );
+
+                if ( offset < 0 )
+                    return path;
+
+                return path.dropLeftPart( offset + 1 );
+            }
+
             String getFileName() const
             {
                 int offset = maximum( path.findLastChar( '/' ), path.findLastChar( '\\' ) );

@@ -87,6 +87,9 @@
 
 #define li_ReferencedClass_override( ClassName ) ClassName* reference() { li::ReferencedClass::reference(); return this; }
 
+// Doesn't work in VS2010 nor GCC 4.6, but should in the future
+#define li_ReferencedClass_override2 auto reference() -> decltype(this) { li::ReferencedClass::reference(); return this; }
+
 namespace li
 {
     template<typename Type> inline Type limitTo( Type value, Type min, Type max )

@@ -354,7 +354,11 @@ namespace li
 
     class ArrayIOStream: public Array<uint8_t>, public SeekableIOStream
     {
-        size_t index, size;
+        protected:
+            size_t index, size;
+
+        private:
+            ArrayIOStream(const ArrayIOStream&);
 
         public:
             ArrayIOStream() : index( 0 ), size( 0 )
@@ -485,10 +489,14 @@ namespace li
         Reference<SeekableInputStream> stream;
         uint64_t pos, segmentOffset, segmentLength;
 
+        private:
+            SeekableInputStreamSegment(const SeekableInputStreamSegment&);
+
         public:
             SeekableInputStreamSegment( SeekableInputStream* stream, uint64_t offset, uint64_t length )
                     : stream( stream ), pos( 0 ), segmentOffset( offset ), segmentLength( length )
             {
+                stream->setPos( segmentOffset );
             }
 
             virtual uint64_t getPos() override

@@ -40,6 +40,7 @@ namespace li
             Array<T>& operator = ( const Array<T>& );
             virtual ~Array();
 
+            T* c_array() { return data; }
             T* detachData();
             T& get( TCapacity field );
             T* getPtr( TCapacity field = 0 );
