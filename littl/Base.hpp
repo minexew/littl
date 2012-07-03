@@ -32,6 +32,7 @@
 
 // basic platform-related stuff
 #if ( defined( __WINDOWS__ ) || defined( _WIN32 ) || defined( _WIN64 ) )
+// MS Windows
 #include <windows.h>
 
 #define __li_MSW
@@ -39,6 +40,9 @@
 #define li_newLine "\r\n"
 #define li_stricmp _stricmp
 #else
+// all POSIX (Linux, OS X)
+#include <unistd.h>
+
 #define __li_POSIX
 #define li_newLine "\n"
 #define li_stricmp strcasecmp
@@ -56,22 +60,23 @@
 #if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 7 )
 #define nullptr __null
 #define override
+using std::ptrdiff_t;
 #endif
 
 #define li_enum_class( name_ ) enum class name_
-#define li_noreturn __declspec( noreturn )
+#define li_noreturn( proto_ ) proto_ __attribute__((noreturn))
 
 #elif defined( _MSC_VER )
 //--- Visual C++-specific ---
 #define snprintf sprintf_s
 #define li_functionName __FUNCTION__
 #define li_enum_class( name_ ) enum name_ : unsigned
-#define li_noreturn __declspec( noreturn )
+#define li_noreturn( proto_ ) __declspec( noreturn ) proto_
 
 #elif defined( DOXYGEN )
 //--- Doxygen versions ---
 #define li_enum_class( name_ ) enum name_
-#define li_noreturn
+#define li_noreturn( proto_ ) proto_
 #endif
 
 #ifndef lengthof
@@ -89,6 +94,8 @@
 
 // Doesn't work in VS2010 nor GCC 4.6, but should in the future
 #define li_ReferencedClass_override2 auto reference() -> decltype(this) { li::ReferencedClass::reference(); return this; }
+
+#define li_tryCall(object_, method_) (((object_) != nullptr) ? (object_)->method_ : decltype((object_)->method_)())
 
 namespace li
 {
@@ -390,6 +397,6 @@ namespace li
 #error "littl: No case-inpendent string compare (stricmp/strcasecmp) function available"
 #endif
     }
-    
+
     static inline void throwException(const char* functionName, const char* name, const char* description);
 }
