@@ -41,6 +41,7 @@ namespace li
             virtual ~Array();
 
             T* c_array() { return data; }
+            const T* c_array() const { return data; }
             T* detachData();
             T& get( TCapacity field );
             T* getPtr( TCapacity field = 0 );

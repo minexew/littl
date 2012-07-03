@@ -27,5 +27,4 @@
 //* depends on: BaseIO
 #include "Console.hpp"
 #include "File.hpp"
-#include "Socket.hpp"
 #include "Http.hpp"
