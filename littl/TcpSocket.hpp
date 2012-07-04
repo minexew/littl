@@ -62,6 +62,9 @@ namespace li
             virtual bool send( const void* data, size_t length ) = 0;
             bool send( const ArrayIOStream& buffer ) { return send( buffer.c_array(), ( size_t ) buffer.getSize() ); }
 
+            // Direct access
+            virtual size_t readUnbuffered( void* buffer, size_t maxlen ) = 0;
+
             li_ReferencedClass_override( TcpSocket )
     };
 }

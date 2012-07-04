@@ -21,8 +21,8 @@
     distribution.
 */
 
-// TODO: Check if it's safe to just include Base.hpp and use its macro(s)
-#ifdef __WIN32
+#if ( defined( __WINDOWS__ ) || defined( _WIN32 ) || defined( _WIN64 ) )
+// This needs to be done before including any other littl headers, pulling in Windows.h
 #define _WIN32_WINNT 0x501
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -101,6 +101,8 @@ namespace li
 
             virtual bool receive( ArrayIOStream& buffer, Timeout timeout ) override;
             virtual bool send( const void* data, size_t length ) override;
+
+            virtual size_t readUnbuffered( void* buffer, size_t maxlen ) override;
 
             virtual bool isReadable() override;
             virtual bool isWritable() override;
@@ -412,84 +414,7 @@ namespace li
 
     size_t TcpSocketImpl::rawRead( void* out, size_t length )
     {
-        if ( state != host && state != connected )
-            return 0;
-
-        return read( out, length, Timeout(), false );
-    }
-
-    bool TcpSocketImpl::read( void* output, size_t length, Timeout timeout, bool peek )
-    {
-        if ( state != host && state != connected )
-            return false;
-
-        if ( !receiving )
-        {
-            // Initiate a receive
-            recvBuffer.resize( length, true );
-            receiving = true;
-            bytesReceived = 0;
-        }
-        else if ( recvBuffer.getCapacity() < length )
-            recvBuffer.resize( length );
-
-        // Are we full?
-        if ( bytesReceived >= length )
-        {
-            if ( output != nullptr )
-                memcpy( output, recvBuffer.c_array(), length );
-
-            if ( !peek )
-                receiving = false;
-
-            return true;
-        }
-
-        do
-        {
-            int got = ::recv( sock, ( char* ) recvBuffer.c_array() + bytesReceived, length - bytesReceived, 0 );
-
-            // The connection has been closed
-            if ( got == 0 )
-            {
-                disconnect();
-                return false;
-            }
-
-            // Socket error
-            if ( got < 0
-#ifdef __li_MSW
-                    && WSAGetLastError() != WSAEWOULDBLOCK )
-#else
-                    && errno != EAGAIN )
-#endif
-            {
-                disconnect();
-                return false;
-            }
-
-            if ( got > 0 )
-            {
-                bytesReceived += got;
-
-                // Received the whole chunk, thanks.
-                if ( bytesReceived >= length )
-                {
-                    // TODO: DRY
-
-                    if ( output != nullptr )
-                        memcpy( output, recvBuffer.c_array(), length );
-
-                    if ( !peek )
-                        receiving = false;
-
-                    return true;
-                }
-            }
-        }
-        while ( !timeout.timedOut() );
-
-        return false;
+        return read( out, length, Timeout(), false ) ? length : 0;
     }
 
     size_t TcpSocketImpl::rawWrite( const void* input, size_t length )
@@ -534,6 +459,109 @@ namespace li
         }
 
         return sentTotal;
+    }
+
+    bool TcpSocketImpl::read( void* output, size_t length, Timeout timeout, bool peek )
+    {
+        if ( state != host && state != connected )
+            return false;
+
+        if ( !receiving )
+        {
+            // Initiate a receive
+            recvBuffer.resize( length, true );
+            receiving = true;
+            bytesReceived = 0;
+        }
+        else if ( recvBuffer.getCapacity() < length )
+            recvBuffer.resize( length );
+
+        // Are we full?
+        if ( bytesReceived >= length )
+        {
+            if ( output != nullptr )
+                memcpy( output, recvBuffer.c_array(), length );
+
+            if ( !peek )
+                receiving = false;
+
+            return true;
+        }
+
+        do
+        {
+            int got = recv( sock, ( char* ) recvBuffer.c_array() + bytesReceived, length - bytesReceived, 0 );
+
+            // The connection has been closed
+            if ( got == 0 )
+            {
+                disconnect();
+                return false;
+            }
+
+            // Socket error
+            if ( got < 0
+#ifdef __li_MSW
+                    && WSAGetLastError() != WSAEWOULDBLOCK )
+#else
+                    && errno != EAGAIN )
+#endif
+            {
+                disconnect();
+                return false;
+            }
+
+            if ( got > 0 )
+            {
+                bytesReceived += got;
+
+                // Received the whole chunk, thanks.
+                if ( bytesReceived >= length )
+                {
+                    // TODO: DRY
+
+                    if ( output != nullptr )
+                        memcpy( output, recvBuffer.c_array(), length );
+
+                    if ( !peek )
+                        receiving = false;
+
+                    return true;
+                }
+            }
+        }
+        while ( !timeout.timedOut() );
+
+        return false;
+    }
+
+    size_t TcpSocketImpl::readUnbuffered( void* buffer, size_t maxlen ) 
+    {
+        if ( state != host && state != connected )
+            return 0;
+
+        int got = recv( sock, ( char* ) buffer, ( int ) maxlen, 0 );
+
+        // The connection has been closed
+        if ( got == 0 )
+        {
+            disconnect();
+            return 0;
+        }
+
+        // Socket error
+        if ( got < 0
+#ifdef __li_MSW
+                && WSAGetLastError() != WSAEWOULDBLOCK )
+#else
+                && errno != EAGAIN )
+#endif
+        {
+            disconnect();
+            return 0;
+        }
+
+        return got;
     }
 
     bool TcpSocketImpl::receive( ArrayIOStream& buffer, Timeout timeout )
