@@ -50,6 +50,7 @@ namespace li
             virtual TcpSocket* accept( bool block ) = 0;
 
             virtual bool connect( const char* host, uint16_t port, bool block ) = 0;
+            virtual bool connectFinished( bool &success ) = 0;
             virtual void disconnect() = 0;
 
             // Safe receive

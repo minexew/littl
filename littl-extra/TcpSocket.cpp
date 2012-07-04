@@ -75,6 +75,7 @@ namespace li
             virtual TcpSocket* accept( bool block ) override;
 
             virtual bool connect( const char* host, uint16_t port, bool block ) override;
+            virtual bool connectFinished( bool &success ) override;
             virtual void disconnect() override;
 
             virtual bool read( void* output, size_t length, Timeout timeout, bool peek ) override;
@@ -103,7 +104,7 @@ namespace li
 
         sock = INVALID_SOCKET;
         isBlocking = blocking;
-        isActuallyBlocking = true;
+        isActuallyBlocking = false;
         delayEnabled = false;
 
         receiving = false;
@@ -153,9 +154,6 @@ namespace li
         // Create a socket, closing any possibly open
         disconnect();
 
-        // Set blocking mode
-        setActuallyBlocking( block );
-
         // Address info structures
         addrinfo hints, *results, *current;
 
@@ -195,8 +193,12 @@ namespace li
             return false;
         }
 
-        if ( ::connect( sock, current->ai_addr, current->ai_addrlen ) == SOCKET_ERROR
-                && WSAGetLastError() != WSAEWOULDBLOCK )
+        isActuallyBlocking = true;
+        setActuallyBlocking( block );
+
+        int res = ::connect( sock, current->ai_addr, current->ai_addrlen );
+
+        if ( res == SOCKET_ERROR && WSAGetLastError() != WSAEWOULDBLOCK )
         {
             freeaddrinfo( results );
             disconnect();
@@ -209,9 +211,55 @@ namespace li
         freeaddrinfo( results );
 
         // Final settings
-        state = connected;
+        state = ( res == SOCKET_ERROR ) ? connecting : connected;
         updateSocket();
         return true;
+    }
+
+    bool TcpSocketImpl::connectFinished( bool &success )
+    {
+        if ( state != connecting )
+        {
+            success = false;
+            return true;
+        }
+
+        fd_set writefds, exceptfds;
+        timeval zeroTime = { 0, 0 };
+
+        // Set up the sets
+        FD_ZERO( &writefds );
+        FD_SET( sock, &writefds );
+
+        FD_ZERO( &exceptfds );
+        FD_SET( sock, &exceptfds );
+
+        int res = select( 0, 0, &writefds, &exceptfds, &zeroTime );
+
+        if ( res == 0 )
+            return false;
+        else if ( res == SOCKET_ERROR )
+        {
+            disconnect();
+            success = false;
+            return true;
+        }
+
+        if ( FD_ISSET( sock, &writefds ) )
+        {
+            state = connected;
+            success = true;
+            return true;
+        }
+
+        if ( FD_ISSET( sock, &exceptfds ) )
+        {
+            disconnect();
+            success = false;
+            return true;
+        }
+
+        return false;
     }
 
     void TcpSocketImpl::disconnect()
@@ -300,6 +348,8 @@ namespace li
 
         if ( sock == INVALID_SOCKET )
             return false;
+
+        isActuallyBlocking = true;
 
         // Build address structure
         SOCKADDR_IN addr;
@@ -479,7 +529,7 @@ namespace li
         {
 #ifdef __li_MSW
             unsigned long nonBlocking = !blocking;
-               ioctlsocket( sock, FIONBIO, &nonBlocking );
+            ioctlsocket( sock, FIONBIO, &nonBlocking );
 #else
             fcntl( sock, F_SETFL, blocking ? O_BLOCK : O_NONBLOCK );
 #endif
