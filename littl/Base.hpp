@@ -95,7 +95,7 @@ using std::ptrdiff_t;
 // Doesn't work in VS2010 nor GCC 4.6, but should in the future
 #define li_ReferencedClass_override2 auto reference() -> decltype(this) { li::ReferencedClass::reference(); return this; }
 
-#define li_tryCall(object_, method_) (((object_) != nullptr) ? (object_)->method_ : decltype((object_)->method_)())
+#define li_tryCall(object_, method_) { if ((object_) != nullptr) (object_)->method_; }
 
 namespace li
 {
