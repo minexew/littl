@@ -21,16 +21,35 @@
     distribution.
 */
 
+// TODO: Check if it's safe to just include Base.hpp and use its macro(s)
+#ifdef __WIN32
 #define _WIN32_WINNT 0x501
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#else
+#include <sys/types.h>
+#include <sys/socket.h>
+
+#include <arpa/inet.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <netdb.h>
+
+typedef int SOCKET;
+static const SOCKET INVALID_SOCKET = -1;
+static const int SOCKET_ERROR = -1;
+#endif
 
 #include <littl/TcpSocket.hpp>
 
 namespace li
 {
+#ifdef __li_MSW
     static bool wsaStarted = false;
     static WSADATA wsaData;
+#endif
 
     class TcpSocketImpl : public TcpSocket
     {
@@ -128,7 +147,7 @@ namespace li
 
         // Try to accept an incoming connection
         int addrlen = sizeof( peer );
-        SOCKET clientSocket = ::accept( sock, ( sockaddr* ) &peer, &addrlen );
+        SOCKET clientSocket = ::accept( sock, ( sockaddr* ) &peer, ( socklen_t* ) &addrlen );
 
         if ( clientSocket == INVALID_SOCKET )
             return nullptr;
@@ -198,14 +217,19 @@ namespace li
 
         int res = ::connect( sock, current->ai_addr, current->ai_addrlen );
 
-        if ( res == SOCKET_ERROR && WSAGetLastError() != WSAEWOULDBLOCK )
+        if ( res == SOCKET_ERROR
+#ifdef __li_MSW
+                && WSAGetLastError() != WSAEWOULDBLOCK )
+#else
+                && errno != EINPROGRESS )
+#endif
         {
             freeaddrinfo( results );
             disconnect();
             return false;
         }
 
-        memcpy( &peer, current->ai_addr, minimum( sizeof( peer ), current->ai_addrlen ) );
+        memcpy( &peer, current->ai_addr, minimum<int>( sizeof( peer ), current->ai_addrlen ) );
 
         // We can release the lookup results now
         freeaddrinfo( results );
@@ -266,7 +290,11 @@ namespace li
     {
         if ( sock != INVALID_SOCKET )
         {
+#ifdef __li_MSW
             closesocket( sock );
+#else
+            close( sock );
+#endif
             sock = INVALID_SOCKET;
         }
 
@@ -275,6 +303,9 @@ namespace li
 
     const char* TcpSocketImpl::getErrorDesc()
     {
+        // TODO: Probably implement our own error handling altogether.
+
+#ifdef __li_MSW
         static char errorBuffer[4096];
 
         DWORD count = FormatMessageA( FORMAT_MESSAGE_FROM_SYSTEM, NULL, WSAGetLastError(), 0, errorBuffer, sizeof( errorBuffer ) - 1, NULL );
@@ -285,6 +316,9 @@ namespace li
             errorBuffer[--count] = 0;
 
         return errorBuffer;
+#else
+        return strerror( errno );
+#endif
     }
 
     const char* TcpSocketImpl::getPeerIP()
@@ -292,6 +326,7 @@ namespace li
         if ( state != host && state != connected )
             return nullptr;
 
+        // This won't work with IPv6, obviously
         return inet_ntoa( peer.sin_addr );
     }
 
@@ -322,7 +357,11 @@ namespace li
         char temp;
 
         if ( recv( sock, &temp, 1, MSG_PEEK ) == SOCKET_ERROR
+#ifdef __li_MSW
                 && WSAGetLastError() != WSAEWOULDBLOCK )
+#else
+                && errno != EAGAIN )
+#endif
             return false;
 
         fd_set socketSet;
@@ -352,13 +391,13 @@ namespace li
         isActuallyBlocking = true;
 
         // Build address structure
-        SOCKADDR_IN addr;
+        sockaddr_in addr;
         addr.sin_family = AF_INET;
         addr.sin_addr.s_addr = INADDR_ANY;
         addr.sin_port = htons( port );                // byteswap to network order
 
         // Bind and try to start listening
-        if ( bind( sock, ( SOCKADDR* )( &addr ), sizeof( SOCKADDR_IN ) ) == SOCKET_ERROR
+        if ( bind( sock, ( sockaddr* )( &addr ), sizeof( addr ) ) == SOCKET_ERROR
                 || ::listen( sock, SOMAXCONN ) == SOCKET_ERROR )
         {
             disconnect();
@@ -418,7 +457,12 @@ namespace li
             }
 
             // Socket error
-            if ( got < 0 && WSAGetLastError() != WSAEWOULDBLOCK )
+            if ( got < 0
+#ifdef __li_MSW
+                    && WSAGetLastError() != WSAEWOULDBLOCK )
+#else
+                    && errno != EAGAIN )
+#endif
             {
                 disconnect();
                 return false;
@@ -460,7 +504,12 @@ namespace li
             int sent = ::send( sock, ( char* ) input + sentTotal, length - sentTotal, 0 );
 
             // Socket error
-            if ( sent <= 0 && WSAGetLastError() != WSAEWOULDBLOCK )
+            if ( sent <= 0
+#ifdef __li_MSW
+                    && WSAGetLastError() != WSAEWOULDBLOCK )
+#else
+                    && errno != EAGAIN )
+#endif
                 return sentTotal;
 
             if ( sent > 0 )
@@ -531,7 +580,14 @@ namespace li
             unsigned long nonBlocking = !blocking;
             ioctlsocket( sock, FIONBIO, &nonBlocking );
 #else
-            fcntl( sock, F_SETFL, blocking ? O_BLOCK : O_NONBLOCK );
+            int flags = fcntl( sock, F_GETFL, 0 );
+
+            if ( blocking )
+                flags &= ~O_NONBLOCK;
+            else
+                flags |= O_NONBLOCK;
+
+            fcntl( sock, F_SETFL, flags );
 #endif
 
             isActuallyBlocking = blocking;
@@ -552,11 +608,15 @@ namespace li
 
     bool TcpSocketImpl::startup()
     {
+#ifdef __li_MSW
         if ( wsaStarted )
             return true;
 
         wsaStarted = ( WSAStartup( MAKEWORD( 2, 2 ), &wsaData ) == 0 );
         return wsaStarted;
+#else
+        return true;
+#endif
     }
 
     void TcpSocketImpl::updateSocket()

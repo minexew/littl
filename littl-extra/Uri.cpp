@@ -21,7 +21,7 @@
     distribution.
 */
 
-#include <littl.hpp>
+#include <littl/Http.hpp>
 
 namespace li
 {
