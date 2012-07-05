@@ -542,22 +542,15 @@ namespace li
 
         int got = recv( sock, ( char* ) buffer, ( int ) maxlen, 0 );
 
-        // The connection has been closed
-        if ( got == 0 )
+        if ( got <= 0 )
         {
-            disconnect();
-            return 0;
-        }
-
-        // Socket error
-        if ( got < 0
 #ifdef __li_MSW
-                && WSAGetLastError() != WSAEWOULDBLOCK )
+            if ( got == 0 || WSAGetLastError() != WSAEWOULDBLOCK )
 #else
-                && errno != EAGAIN )
+            if ( got == 0 || errno != EAGAIN )
 #endif
-        {
-            disconnect();
+                disconnect();
+
             return 0;
         }
 
