@@ -48,6 +48,11 @@
 #define li_stricmp strcasecmp
 #endif
 
+// Clang has this
+#ifndef __has_feature
+#define __has_feature(x) 0
+#endif
+
 //--- GCC-specific ---
 #ifdef __GNUC__
 #if __GNUC__ == 4
@@ -58,8 +63,14 @@
 #endif
 
 #if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 7 )
+#if !__has_feature(cxx_nullptr)
 #define nullptr __null
+#endif
+
+#if !__has_feature(cxx_override_control)
 #define override
+#endif
+
 using std::ptrdiff_t;
 #endif
 
