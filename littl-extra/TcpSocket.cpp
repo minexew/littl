@@ -21,36 +21,12 @@
     distribution.
 */
 
-#if ( defined( __WINDOWS__ ) || defined( _WIN32 ) || defined( _WIN64 ) )
-// This needs to be done before including any other littl headers, pulling in Windows.h
-#define _WIN32_WINNT 0x501
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#else
-#include <sys/types.h>
-#include <sys/socket.h>
-
-#include <arpa/inet.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <netdb.h>
-
-typedef int SOCKET;
-static const SOCKET INVALID_SOCKET = -1;
-static const int SOCKET_ERROR = -1;
-#endif
+#include "Common.hpp"
 
 #include <littl/TcpSocket.hpp>
 
 namespace li
 {
-#ifdef __li_MSW
-    static bool wsaStarted = false;
-    static WSADATA wsaData;
-#endif
-
     class TcpSocketImpl : public TcpSocket
     {
         private:
@@ -72,7 +48,6 @@ namespace li
             int32_t messageLength;
 
             void setActuallyBlocking( bool blocking );
-            static bool startup();
             void updateSocket();
 
         private:
@@ -170,7 +145,7 @@ namespace li
 
     bool TcpSocketImpl::connect( const char* host, uint16_t port, bool block )
     {
-        startup();
+        socketStartup();
 
         // Create a socket, closing any possibly open
         disconnect();
@@ -380,7 +355,7 @@ namespace li
 
     bool TcpSocketImpl::listen( uint16_t port )
     {
-        startup();
+        socketStartup();
 
         // Create a socket, closing any possibly open
         disconnect();
@@ -625,19 +600,6 @@ namespace li
     {
         delayEnabled = enabled;
         updateSocket();
-    }
-
-    bool TcpSocketImpl::startup()
-    {
-#ifdef __li_MSW
-        if ( wsaStarted )
-            return true;
-
-        wsaStarted = ( WSAStartup( MAKEWORD( 2, 2 ), &wsaData ) == 0 );
-        return wsaStarted;
-#else
-        return true;
-#endif
     }
 
     void TcpSocketImpl::updateSocket()
