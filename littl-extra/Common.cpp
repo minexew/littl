@@ -30,6 +30,24 @@ namespace li
     WSADATA wsaData;
 #endif
 
+    const char* getLastSocketErrorDesc()
+    {
+#ifdef __li_MSW
+        static char errorBuffer[4096];
+        
+        DWORD count = FormatMessageA( FORMAT_MESSAGE_FROM_SYSTEM, NULL, WSAGetLastError(), 0, errorBuffer, sizeof( errorBuffer ) - 1, NULL );
+        errorBuffer[count] = 0;
+        
+        // Drop any trailing newlines
+        while ( count > 0 && ( errorBuffer[count - 1] == '\r' || errorBuffer[count - 1] == '\n' ) )
+            errorBuffer[--count] = 0;
+        
+        return errorBuffer;
+#else
+        return strerror( errno );
+#endif
+    }
+    
     addrinfo* resolveAddr( const char* hostname, int port, addrinfo* hints, addrinfo*& results, int family, int socktype, int protocol )
     {
         addrinfo *current;

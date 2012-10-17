@@ -35,6 +35,7 @@ namespace li
             static UdpSocket* create();
             virtual ~UdpSocket() {}
 
+            virtual const char* getErrorDesc() = 0;
             virtual const char* getPeerIP() = 0;
 
             virtual SockAddress* getBroadcastAddress( int port ) = 0;

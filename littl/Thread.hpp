@@ -331,7 +331,14 @@ namespace li
 #ifdef __li_MSW
                 InitializeCriticalSection( &criticalSection );
 #else
-                pthread_mutex_init(&mutex, NULL);
+                pthread_mutexattr_t mta;
+                
+                mutex = PTHREAD_MUTEX_INITIALIZER;
+                
+                pthread_mutexattr_init(&mta);
+                pthread_mutexattr_settype(&mta, PTHREAD_MUTEX_RECURSIVE);
+                
+                pthread_mutex_init(&mutex, &mta);
 #endif
             }
 

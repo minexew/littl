@@ -46,6 +46,7 @@ namespace li
             UdpSocketImpl();
             virtual ~UdpSocketImpl();
 
+            virtual const char* getErrorDesc() override;
             virtual const char* getPeerIP() override;
 
             virtual SockAddress* getBroadcastAddress( int port ) override;
@@ -78,7 +79,9 @@ namespace li
 
         int yes = 1;
 
-        if ( setsockopt( sock, SOL_SOCKET, SO_BROADCAST, ( const char* ) &yes, sizeof( yes ) ) < 0 )
+        if ( setsockopt( sock, SOL_SOCKET, SO_BROADCAST, ( const char* ) &yes, sizeof( yes ) ) < 0
+                || setsockopt( sock, SOL_SOCKET, SO_REUSEADDR, ( const char* ) &yes, sizeof( yes ) ) < 0
+                )
         {
             disconnect();
             return false;
@@ -134,10 +137,15 @@ namespace li
         auto ai = ( sockaddr_in* )calloc( 1, sizeof( sockaddr_in ) );
         ai->sin_family = AF_INET;
         ai->sin_port = htons( port );
-        ai->sin_addr.S_un.S_addr = 0xFFFFFFFF;  // 255.255.255.255
+        ai->sin_addr.s_addr = inet_addr("255.255.255.255");
         return reinterpret_cast<SockAddress*>( ai );
     }
 
+    const char* UdpSocketImpl::getErrorDesc()
+    {
+        return getLastSocketErrorDesc();
+    }
+    
     const char* UdpSocketImpl::getPeerIP()
     {
         // This won't work with IPv6, obviously
@@ -159,6 +167,7 @@ namespace li
 
         // Build address structure
         sockaddr_in addr;
+        addr.sin_len = sizeof(sockaddr_in);
         addr.sin_family = AF_INET;
         addr.sin_addr.s_addr = INADDR_ANY;
         addr.sin_port = htons( port );                // byteswap to network order
@@ -181,7 +190,7 @@ namespace li
         buffer.clear( true );
         setActuallyBlocking( timeout.infinite );
 
-        int fromlen = sizeof( peer );
+        socklen_t fromlen = sizeof( peer );
 
         do
         {
@@ -198,7 +207,7 @@ namespace li
             {
                 buffer.resize( incoming, true );
 
-                int got = recvfrom( sock, ( char* ) buffer.c_array(), incoming, 0, &peer, &fromlen );
+                ssize_t got = recvfrom( sock, ( char* ) buffer.c_array(), ( size_t ) incoming, 0, &peer, &fromlen );
 
                 if ( got <= 0 )
                 {
@@ -230,7 +239,7 @@ namespace li
         if ( sock == INVALID_SOCKET && !createSocket() )
             return false;
 
-        int res = sendto( sock, ( const char* ) data, ( int ) length, 0, ( sockaddr* ) to, sizeof( sockaddr_in ) );
+        ssize_t res = sendto( sock, ( const char* ) data, ( int ) length, 0, ( sockaddr* ) to, sizeof( sockaddr_in ) );
 
         return res >= 0 && ( size_t ) res == length;
     }

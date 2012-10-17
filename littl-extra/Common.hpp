@@ -27,6 +27,7 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #else
+#include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 
@@ -54,4 +55,6 @@ namespace li
     addrinfo* resolveAddr( const char* hostname, int port, addrinfo* hints, addrinfo*& results,
             int family, int socktype, int protocol );
     bool socketStartup();
+    
+    const char* getLastSocketErrorDesc();
 }

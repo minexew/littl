@@ -280,22 +280,7 @@ namespace li
 
     const char* TcpSocketImpl::getErrorDesc()
     {
-        // TODO: Probably implement our own error handling altogether.
-
-#ifdef __li_MSW
-        static char errorBuffer[4096];
-
-        DWORD count = FormatMessageA( FORMAT_MESSAGE_FROM_SYSTEM, NULL, WSAGetLastError(), 0, errorBuffer, sizeof( errorBuffer ) - 1, NULL );
-        errorBuffer[count] = 0;
-
-        // Drop any trailing newlines
-        while ( count > 0 && ( errorBuffer[count - 1] == '\r' || errorBuffer[count - 1] == '\n' ) )
-            errorBuffer[--count] = 0;
-
-        return errorBuffer;
-#else
-        return strerror( errno );
-#endif
+        return getLastSocketErrorDesc();
     }
 
     const char* TcpSocketImpl::getPeerIP()
