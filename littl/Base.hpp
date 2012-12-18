@@ -43,6 +43,10 @@
 // all POSIX (Linux, OS X)
 #include <unistd.h>
 
+#if defined(__APPLE__)
+#define li_Apple
+#endif
+
 #define __li_POSIX
 #define li_newLine "\n"
 #define li_stricmp strcasecmp
