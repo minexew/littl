@@ -25,6 +25,10 @@
 
 #include <littl/Base.hpp>
 
+#ifndef li_MSW
+#include <sys/time.h>
+#endif
+
 namespace li
 {
 #ifdef li_MSW
@@ -65,6 +69,9 @@ namespace li
 #else
     class PerfTimer
     {
+        public:
+            typedef uint64_t Counter;
+        
         public:
             PerfTimer()
             {
