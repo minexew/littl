@@ -28,6 +28,10 @@
 #include <pthread.h>
 #endif
 
+#ifdef li_Apple
+#include <libkern/OSAtomic.h>
+#endif
+
 #define li_synchronized(mutex_) CriticalSection li_cs_((mutex_));
 
 namespace li
@@ -398,7 +402,7 @@ namespace li
             }
     };
 
-    template <class T> class MutexVar
+    /*template <class T> class MutexVar
     {
         Mutex& mutex;
         T value;
@@ -449,5 +453,63 @@ namespace li
 
                 return value + other;
             }
+    };*/
+
+    class ConditionVar
+    {
+#ifdef li_MSW
+        HANDLE event;
+#endif
+
+        public:
+            ConditionVar()
+            {
+#ifdef li_MSW
+                event = CreateEvent( nullptr, true, false, nullptr );
+#endif
+            }
+
+            ~ConditionVar()
+            {
+#ifdef li_MSW
+                CloseHandle( event );
+#endif
+            }
+
+            void set()
+            {
+#ifdef li_MSW
+                SetEvent( event );
+#endif
+            }
+
+            bool waitFor()
+            {
+#ifdef li_MSW
+                return WaitForSingleObject( event, INFINITE ) == WAIT_OBJECT_0;
+#endif
+            }
     };
+
+    inline void interlockedDecrement(volatile int32_t* a_ptr)
+    {
+#ifdef li_MSW
+        InterlockedDecrement((unsigned*) a_ptr);
+#elif defined(li_Apple)
+        OSAtomicDecrement32(a_ptr);
+#else
+        __sync_fetch_and_sub(a_ptr, 1);
+#endif
+    }
+
+    inline void interlockedIncrement(volatile int32_t* a_ptr)
+    {
+#ifdef li_MSW
+        InterlockedIncrement((unsigned*) a_ptr);
+#elif defined(li_Apple)
+        OSAtomicIncrement32(a_ptr);
+#else
+        __sync_fetch_and_add(a_ptr, 1);
+#endif
+    }
 }

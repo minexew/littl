@@ -79,6 +79,7 @@ using std::ptrdiff_t;
 #endif
 
 #define li_enum_class( name_ ) enum class name_
+#define li_force_inline( proto_ ) proto_ __attribute__((always_inline))
 #define li_noreturn( proto_ ) proto_ __attribute__((noreturn))
 
 #elif defined( _MSC_VER )
@@ -86,11 +87,13 @@ using std::ptrdiff_t;
 #define snprintf sprintf_s
 #define li_functionName __FUNCTION__
 #define li_enum_class( name_ ) enum name_ : unsigned
+#define li_force_inline( proto_ ) __forceinline proto_
 #define li_noreturn( proto_ ) __declspec( noreturn ) proto_
 
 #elif defined( DOXYGEN )
 //--- Doxygen versions ---
 #define li_enum_class( name_ ) enum name_
+#define li_force_inline( proto_ ) proto_
 #define li_noreturn( proto_ ) proto_
 #endif
 

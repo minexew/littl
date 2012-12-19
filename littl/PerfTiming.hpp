@@ -62,25 +62,6 @@ namespace li
             {
             }
     };
-
-    class TinySleeper
-    {
-        unsigned int countdown;
-
-        public:
-            TinySleeper( unsigned int busyWaitsBeforeSleep = 50 )
-                : countdown( busyWaitsBeforeSleep )
-            {
-            }
-
-            void doSleep()
-            {
-                if (countdown != 0)
-                    countdown--;
-                else
-                    Sleep(1);
-            }
-    };
 #else
     class PerfTimer
     {
@@ -108,25 +89,6 @@ namespace li
             static void tinySleepIfPossible()
             {
                 usleep( 1 );
-            }
-    };
-
-    class TinySleeper
-    {
-        unsigned int countdown;
-
-        public:
-            TinySleeper( unsigned int busyWaitsBeforeSleep = 10 )
-                : countdown( busyWaitsBeforeSleep )
-            {
-            }
-
-            void doSleep()
-            {
-                if (countdown != 0)
-                    countdown--;
-                else
-                    usleep( 5 );
             }
     };
 #endif
