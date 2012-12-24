@@ -524,6 +524,9 @@ namespace li
     {
 #ifdef li_MSW
         HANDLE event;
+#else
+        pthread_mutex_t waiting;
+        pthread_cond_t cond;
 #endif
 
         public:
@@ -531,6 +534,9 @@ namespace li
             {
 #ifdef li_MSW
                 event = CreateEvent( nullptr, false, false, nullptr );
+#else
+                waiting = PTHREAD_MUTEX_INITIALIZER;
+                cond = PTHREAD_COND_INITIALIZER;
 #endif
             }
 
@@ -545,6 +551,10 @@ namespace li
             {
 #ifdef li_MSW
                 SetEvent( event );
+#else
+                pthread_mutex_lock(&waiting);
+                pthread_cond_signal(&cond);
+                pthread_mutex_unlock(&waiting);
 #endif
             }
 
@@ -552,6 +562,11 @@ namespace li
             {
 #ifdef li_MSW
                 return WaitForSingleObject( event, INFINITE ) == WAIT_OBJECT_0;
+#else
+                pthread_mutex_lock(&waiting);
+                pthread_cond_wait(&cond, &waiting);
+                pthread_mutex_unlock(&waiting);
+                return true;
 #endif
             }
     };
