@@ -24,7 +24,7 @@
 
 #include <littl/Base.hpp>
 
-#ifndef __li_MSW
+#ifndef li_MSW
 #include <pthread.h>
 #endif
 
@@ -36,6 +36,21 @@
 
 namespace li
 {
+#ifdef li_MSW
+    // For Thread.setName()
+    const DWORD MS_VC_EXCEPTION=0x406D1388;
+
+    #pragma pack(push,8)
+    typedef struct tagTHREADNAME_INFO
+    {
+        DWORD dwType;       // Must be 0x1000.
+        LPCSTR szName;      // Pointer to name (in user addr space).
+        DWORD dwThreadID;   // Thread ID (-1=caller thread).
+        DWORD dwFlags;      // Reserved for future use, must be zero.
+    } THREADNAME_INFO;
+    #pragma pack(pop)
+#endif
+
     template<typename ParamType>
     class ThreadLauncher
     {
@@ -55,6 +70,27 @@ namespace li
         HANDLE threadHandle;
         DWORD threadId;
         int priority;
+
+#ifdef _MSC_VER
+        const char* name;
+
+        static void setThreadName( DWORD dwThreadID, const char* threadName )
+        {
+            THREADNAME_INFO info;
+            info.dwType = 0x1000;
+            info.szName = threadName;
+            info.dwThreadID = dwThreadID;
+            info.dwFlags = 0;
+
+            __try
+            {
+                RaiseException( MS_VC_EXCEPTION, 0, sizeof( info ) / sizeof( ULONG_PTR ), ( ULONG_PTR* ) &info );
+            }
+            __except(EXCEPTION_EXECUTE_HANDLER)
+            {
+            }
+        }
+#endif
 
         static DWORD threadStartRoutine( ThreadStartInfo* info )
         {
@@ -76,6 +112,9 @@ namespace li
             info->threadFunction(info->param);
             info->launcher->running = false;
             
+            if ( info->exitFunction != nullptr )
+                info->exitFunction( info->param );
+
             return NULL;
         }
 #endif
@@ -89,6 +128,7 @@ namespace li
 
             bool kill();
             bool isRunning() const { return running; }
+            bool setName( const char* name );
             void setPriority( int priority );
             bool start( ParamType param, void ( *exitFunction )( ParamType ) );
             bool waitFor( long time = -1 );
@@ -104,6 +144,10 @@ namespace li
         threadHandle = INVALID_HANDLE_VALUE;
         threadId = 0;
         priority = THREAD_PRIORITY_NORMAL;
+
+#ifdef _MSC_VER
+        name = nullptr;
+#endif
 #else
         thread = 0;
 #endif
@@ -132,6 +176,16 @@ namespace li
 #endif
     }
 
+    __li_member( bool ) setName( const char* name )
+    {
+#ifdef _MSC_VER
+        this->name = name;
+        return true;
+#else
+        return false;
+#endif
+    }
+
     __li_member( void ) setPriority( int priority )
     {
 #ifdef __li_MSW
@@ -155,6 +209,12 @@ namespace li
 #ifdef __li_MSW
         running = true;
         threadHandle = CreateThread( 0, 0, ( LPTHREAD_START_ROUTINE )( threadStartRoutine ), &info, 0, &threadId );
+
+#ifdef _MSC_VER
+        if (name != nullptr)
+            setThreadName( GetThreadId( threadHandle ), name );
+#endif
+
         setPriority( priority );
         if ( threadHandle == INVALID_HANDLE_VALUE )
         {
@@ -258,6 +318,11 @@ namespace li
             bool kill()
             {
                 return launcher.kill();
+            }
+
+            bool setName( const char* name )
+            {
+                return launcher.setName( name );
             }
 
             void setPriority( Priority priority )
@@ -465,7 +530,7 @@ namespace li
             ConditionVar()
             {
 #ifdef li_MSW
-                event = CreateEvent( nullptr, true, false, nullptr );
+                event = CreateEvent( nullptr, false, false, nullptr );
 #endif
             }
 

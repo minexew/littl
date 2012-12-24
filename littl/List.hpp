@@ -201,12 +201,23 @@ namespace li
                 if ( field < length )
                 {
                     this->move( field + 1, field, length - field );
-                    this->get( field ) = item;
+                    this->getUnsafe( field ) = item;
                     length++;
                     return field;
                 }
                 else
                     return add( item );
+            }
+
+            T& insertEmpty( TLength field )
+            {
+                if ( field < length )
+                {
+                    this->move( field + 1, field, length - field );
+                    return this->getUnsafe( field );
+                }
+                else
+                    return addEmpty();
             }
 
             bool isEmpty() const

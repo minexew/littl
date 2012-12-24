@@ -416,6 +416,23 @@ namespace li
                 }
             }
 
+            template <typename T> void fastWriteItem( const T item )
+            {
+                size += sizeof( T );
+                resize( size, true );
+
+                *reinterpret_cast<T*>( getPtrUnsafe( index ) ) = item;
+                index += sizeof( T );
+            }
+
+            template <typename T> void fastWriteItemUnsafe( const T item )
+            {
+                size += sizeof( T );
+
+                *reinterpret_cast<T*>( getPtrUnsafe( index ) ) = item;
+                index += sizeof( T );
+            }
+
             virtual uint64_t getPos()
             {
                 return index;
@@ -429,6 +446,11 @@ namespace li
             virtual uint64_t getSize() const
             {
                 return size;
+            }
+
+            void growBuffer( size_t amount )
+            {
+                resize( size + amount, true );
             }
 
             virtual bool isReadable()
@@ -449,9 +471,19 @@ namespace li
                 if ( index + length > size )
                     length = size - index;
 
-                memcpy( out, getPtr( index ), length );
+                memcpy( out, getPtrUnsafe( index ), length );
                 index += length;
                 return length;
+            }
+
+            template <typename T> T* readObject()
+            {
+                if ( index + sizeof( T ) > size )
+                    return 0;
+
+                T* obj = reinterpret_cast<T*>( getPtrUnsafe( index ) );
+                index += sizeof( T );
+                return obj;
             }
 
             /*virtual size_t rawWrite( const void* in, size_t length )
@@ -475,10 +507,10 @@ namespace li
                 if ( index + length > size )
                 {
                     size = index + length;
-                    resize( size );
+                    resize( size, true );
                 }
 
-                memcpy( getPtr( index ), input, length );
+                memcpy( getPtrUnsafe( index ), input, length );
                 index += length;
                 return length;
             }
