@@ -187,11 +187,11 @@ namespace li
                 return compare( str, other, caseSensitive ) == 0;
             }
 
-            int findChar( Utf8Char c, size_t beginAt = 0 ) const;
-            int findDifferentChar( Utf8Char c, size_t beginAt = 0 ) const;
-            int findLastChar( Utf8Char c, size_t beginAt = 0 ) const;
-            int findLastSubString( const StringTpl& pattern, size_t beginAt = 0 );
-            int findSubString( const StringTpl& pattern, size_t beginAt = 0 ) const;
+            intptr_t findChar( Utf8Char c, size_t beginAt = 0 ) const;
+            intptr_t findDifferentChar( Utf8Char c, size_t beginAt = 0 ) const;
+            intptr_t findLastChar( Utf8Char c, size_t beginAt = 0 ) const;
+            intptr_t findLastSubString( const StringTpl& pattern, size_t beginAt = 0 );
+            intptr_t findSubString( const StringTpl& pattern, size_t beginAt = 0 ) const;
             static StringTpl<blockSize> formatBool( bool value, bool useText = false );
             static StringTpl<blockSize> formatFloat( float value, int width = -1 );
             static StringTpl<blockSize> formatInt( int value, int width = -1, Base base = decimal );
@@ -271,8 +271,8 @@ namespace li
             float toFloat() const { return toFloat( data ); }
             static float toFloat( const char* text ) { return text != nullptr ? strtof( text, nullptr ) : 0; }
 
-            int toInt() const { return toInt( data ); }
-            static int toInt( const char* text ) { return text != nullptr ? strtol( text, nullptr, 0 ) : 0; }
+            long toInt() const { return toInt( data ); }
+            static long toInt( const char* text ) { return text != nullptr ? strtol( text, nullptr, 0 ) : 0; }
 
             uint64_t toUnsigned( Base base = undefined ) const { return parseUnsigned( data, base ); }
             static uint64_t parseUnsigned( const char* text, Base base = undefined );
@@ -594,7 +594,7 @@ namespace li
         return true;
     }
 
-    __li_member( int ) findChar( Utf8Char c, size_t beginAt ) const
+    __li_member( intptr_t ) findChar( Utf8Char c, size_t beginAt ) const
     {
         size_t index = 0;
 
@@ -609,7 +609,7 @@ namespace li
         return -1;
     }
 
-    __li_member( int ) findDifferentChar( Utf8Char c, size_t beginAt ) const
+    __li_member( intptr_t ) findDifferentChar( Utf8Char c, size_t beginAt ) const
     {
         size_t index = 0;
 
@@ -624,14 +624,14 @@ namespace li
         return -1;
     }
 
-    __li_member( int ) findLastChar( Utf8Char c, size_t beginAt ) const
+    __li_member( intptr_t ) findLastChar( Utf8Char c, size_t beginAt ) const
     {
         intptr_t lastFound = -1, cache = -1;
         size_t index = beginAt;
 
         while ( index < getNumCharsCached( cache ) )
         {
-            int newIndex = findChar( c, index );
+            intptr_t newIndex = findChar( c, index );
 
             if ( newIndex < 0 )
                 break;
@@ -645,7 +645,7 @@ namespace li
         return lastFound;
     }
 
-    __li_member( int ) findLastSubString( const StringTpl& pattern, size_t beginAt )
+    __li_member( intptr_t ) findLastSubString( const StringTpl& pattern, size_t beginAt )
     {
         intptr_t lastFound = -1;
         size_t index = beginAt;
@@ -666,7 +666,7 @@ namespace li
         return lastFound;
     }
 
-    __li_member( int ) findSubString( const StringTpl& pattern, size_t beginAt ) const
+    __li_member( intptr_t ) findSubString( const StringTpl& pattern, size_t beginAt ) const
     {
         size_t index = 0;
 
@@ -945,7 +945,7 @@ namespace li
 
     __li_member( void ) split( Unicode::Char separator, StringTpl& leftSide, StringTpl& rightSide, bool rightDefault )
     {
-        int pos = findChar( separator );
+        intptr_t pos = findChar( separator );
 
         StringTpl outputLeft, outputRight;
 
@@ -968,7 +968,7 @@ namespace li
 
     __li_member( void ) split( const StringTpl& separator, StringTpl& leftSide, StringTpl& rightSide, bool rightDefault )
     {
-        int pos = findSubString( separator );
+        intptr_t pos = findSubString( separator );
 
         StringTpl outputLeft, outputRight;
 

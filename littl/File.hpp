@@ -115,7 +115,7 @@ namespace li
 
             static String getDirectoryFromPath( const String& path )
             {
-                return path.leftPart( maximum( 0, path.findLastChar( '/' ), path.findLastChar( '\\' ) ) );
+                return path.leftPart( maximum<intptr_t>( 0, path.findLastChar( '/' ), path.findLastChar( '\\' ) ) );
             }
 
             virtual uint64_t getPos()

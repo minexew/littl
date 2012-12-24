@@ -48,7 +48,7 @@ namespace li
             T* getPtrUnsafe( TCapacity field = 0 ) { return data + field; }
             const T* getPtrUnsafe( TCapacity field = 0 ) const { return data + field; }
             const T& get( TCapacity field ) const;
-            unsigned getCapacity() const { return capacity; }
+            size_t getCapacity() const { return capacity; }
             T& getUnsafe( TCapacity field ) { return data[field]; }
             const T& getUnsafe( TCapacity field ) const { return data[field]; }
             void load( const T* source, TCapacity count, TCapacity offset = 0 );

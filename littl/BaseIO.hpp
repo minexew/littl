@@ -83,9 +83,9 @@ namespace li
                 return setPos( 0 );
             }
 
-            bool seek( int num )
+            bool seek( int64_t bytes )
             {
-                return setPos( getPos() + num );
+                return setPos( getPos() + bytes );
             }
     };
 

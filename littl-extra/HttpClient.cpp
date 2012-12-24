@@ -74,7 +74,7 @@ namespace li
         if ( uri.beginsWith( "http://" ) )
             uri = uri.dropLeft( 7 );
 
-        int slash = uri.findChar( '/' );
+        intptr_t slash = uri.findChar( '/' );
         String host;
 
         if ( slash < 0 )

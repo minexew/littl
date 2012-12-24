@@ -48,7 +48,7 @@ namespace li
 
             String getDirectory() const
             {
-                int offset = maximum( path.findLastChar( '/' ), path.findLastChar( '\\' ) );
+                intptr_t offset = maximum( path.findLastChar( '/' ), path.findLastChar( '\\' ) );
 
                 if ( offset < 0 )
                     return ".";
@@ -58,7 +58,7 @@ namespace li
 
             String getExtension() const
             {
-                int offset = path.findLastChar( '.' );
+                intptr_t offset = path.findLastChar( '.' );
 
                 if ( offset < 0 )
                     return path;
@@ -68,7 +68,7 @@ namespace li
 
             String getFileName() const
             {
-                int offset = maximum( path.findLastChar( '/' ), path.findLastChar( '\\' ) );
+                intptr_t offset = maximum( path.findLastChar( '/' ), path.findLastChar( '\\' ) );
 
                 if ( offset < 0 )
                     return path;

@@ -85,9 +85,9 @@ namespace cfx2
                 return newList( node->children, false );
             }
 
-            Iterator getIterator(bool reverse = false)
+            Iterator getIterator( bool reverse = false )
             {
-                return Iterator(*this, reverse ? getNumChildren() - 1 : 0);
+                return Iterator( *this, reverse ? getNumChildren() - 1 : 0 );
             }
 
             List* getList( const char* command )
@@ -108,7 +108,7 @@ namespace cfx2
 
             size_t getNumChildren()
             {
-                return (node != nullptr && node->children != nullptr) ? (node->children->length) : 0;
+                return ( node != nullptr && node->children != nullptr ) ? node->children->length : 0;
             }
 
             const char* getText()
@@ -153,7 +153,7 @@ namespace cfx2
                 return node != 0;
             }
 
-            Node operator [] ( unsigned index )
+            Node operator [] ( size_t index )
             {
                 if ( !node )
                     return 0;
