@@ -571,6 +571,17 @@ namespace li
             }
     };
 
+    inline bool interlockedCompareExchange(volatile int32_t* value_ptr, int32_t compareTo, int32_t newValue)
+    {
+#ifdef li_MSW
+        return InterlockedCompareExchange((volatile LONG*) value_ptr, newValue, compareTo) == compareTo;
+#elif defined(li_Apple)
+        return OSAtomicCompareAndSwap32(compareTo, newValue, value_ptr);
+#else
+        return __sync_bool_compare_and_swap(value_ptr, compareTo, newValue);
+#endif
+    }
+
     inline void interlockedDecrement(volatile int32_t* a_ptr)
     {
 #ifdef li_MSW
