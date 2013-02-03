@@ -33,10 +33,13 @@
 
 namespace li
 {
-    li_enum_class( ArrayOptions )
+    namespace ArrayOptions
     {
-        noOverflowCheck = 1
-    };
+        enum
+        {
+            noOverflowCheck = 1
+        };
+    }
 
     template<typename T, typename TCapacity = size_t, class IAllocator = Allocator<T>, int options = 0>
     class Array

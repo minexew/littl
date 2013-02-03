@@ -318,7 +318,7 @@ namespace li
         public:
             TLength add( T* item )
             {
-                this->resize( length + 1, true );
+                this->resize( this->length + 1, true );
                 this->getUnsafe( this->length ) = item;
                 return this->length++;
             }
