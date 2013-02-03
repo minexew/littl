@@ -1106,6 +1106,8 @@ namespace li
             index += got;
         }
 
+        StringIter& operator = (const StringIter&);
+
         public:
             StringIter( const String& string ) : string( string ), index( 0 ), next( Utf8::invalidChar )
             {

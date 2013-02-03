@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2008-2011 Xeatheran Minexew
+    Copyright (c) 2008-2013 Xeatheran Minexew
 
     This software is provided 'as-is', without any express or implied
     warranty. In no event will the authors be held liable for any damages
@@ -25,9 +25,20 @@
 
 #include <littl/Allocator.hpp>
 
+#pragma warning ( push )
+
+// warning C4127: conditional expression is constant
+// Reason to ignore: We are using it for compile-time instantiation options
+#pragma warning ( disable : 4127 )
+
 namespace li
 {
-    template<typename T, typename TCapacity = size_t, class IAllocator = Allocator<T> >
+    li_enum_class( ArrayOptions )
+    {
+        noOverflowCheck = 1
+    };
+
+    template<typename T, typename TCapacity = size_t, class IAllocator = Allocator<T>, int options = 0>
     class Array
     {
         T* data;
@@ -63,8 +74,8 @@ namespace li
             T* operator * () { return data; }
     };
 
-#define __li_member( type ) template<typename T, typename TCapacity, class IAllocator> type Array<T, TCapacity, IAllocator>::
-#define __li_member_ template<typename T, typename TCapacity, class IAllocator> Array<T, TCapacity, IAllocator>::
+#define __li_member( type ) template<typename T, typename TCapacity, class IAllocator, int options> type Array<T, TCapacity, IAllocator, options>::
+#define __li_member_ template<typename T, typename TCapacity, class IAllocator, int options> Array<T, TCapacity, IAllocator, options>::
 
     __li_member_ Array( TCapacity initialCapacity ) : data( 0 ), capacity( initialCapacity )
     {
@@ -110,24 +121,33 @@ namespace li
 
     __li_member( T& ) get( TCapacity field )
     {
-        if ( field >= capacity )
-            resize( field * 2 + 1 );
+        if ( !( options & ArrayOptions::noOverflowCheck ) )
+        {
+            if ( field >= capacity )
+                resize( field * 2 + 1 );
+        }
 
         return data[field];
     }
 
     __li_member( T* ) getPtr( TCapacity field )
     {
-        if ( field >= capacity )
-            resize( field * 2 + 1 );
+        if ( !( options & ArrayOptions::noOverflowCheck ) )
+        {
+            if ( field >= capacity )
+                resize( field * 2 + 1 );
+        }
 
         return data + field;
     }
 
     __li_member( const T& ) get( TCapacity field ) const
     {
-        if ( field >= capacity )
-            throwException("li.Array.get(const)", "IndexOutOfBounds", "Specified index is outside array bounds");
+        if ( !( options & ArrayOptions::noOverflowCheck ) )
+        {
+            if ( field >= capacity )
+                throwException( "li.Array.get(const)", "IndexOutOfBounds", "Specified index is outside array bounds" );
+        }
 
         return data[field];
     }
@@ -190,8 +210,11 @@ namespace li
 
     __li_member( void ) set( TCapacity field, const T& value )
     {
-        if ( field >= capacity )
-            resize( field + 1 );
+        if ( !( options & ArrayOptions::noOverflowCheck ) )
+        {
+            if ( field >= capacity )
+                resize( field + 1 );
+        }
 
         data[field] = value;
     }
@@ -199,3 +222,5 @@ namespace li
 #undef __li_member
 #undef __li_member_
 }
+
+#pragma warning ( pop )

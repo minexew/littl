@@ -1,6 +1,10 @@
 #pragma once
 
 #ifdef _MSC_VER
+// warning C4100: 'identifier' : unreferenced formal parameter
+// Reason to ignore: Complains about destructPointer called on POD data
+#pragma warning ( disable : 4100 )
+
 // warning C4345: behavior change: an object of POD type constructed with an initializer of the form () will be default-initialized
 // Reason to ignore: Spams when there is a li::List of structs without constructor
 #pragma warning ( disable : 4345 )

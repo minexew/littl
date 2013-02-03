@@ -49,6 +49,8 @@ namespace li
             Chain<Type, chainLink>& chain;
             Type* link;
 
+            Iterator& operator = ( const Iterator& );
+
             public:
                 Iterator( Chain<Type, chainLink>& chain ) : chain( chain )
                 {

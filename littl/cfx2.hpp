@@ -21,6 +21,8 @@ namespace cfx2
                 Node& node;
                 intptr_t i;
 
+                Iterator& operator = ( const Iterator& );
+
                 public:
                     Iterator( Node& node, intptr_t i ) : node( node ), i( i ) {}
 

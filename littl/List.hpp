@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2008-2011 Xeatheran Minexew
+    Copyright (c) 2008-2013 Xeatheran Minexew
 
     This software is provided 'as-is', without any express or implied
     warranty. In no event will the authors be held liable for any damages
@@ -21,6 +21,8 @@
     distribution.
 */
 
+// TODO: The validity of accessing items where `index >= length` should be considered
+
 #pragma once
 
 #include <littl/Array.hpp>
@@ -39,7 +41,7 @@
 
 namespace li
 {
-#define __li_base Array<T, TLength, IAllocator>
+#define __li_base Array<T, TLength, IAllocator, options>
 
     template <typename T, typename TLength> class Iterable
     {
@@ -57,7 +59,7 @@ namespace li
     	    T current() { return iterableGetItem( iterator ); }
     };
 
-    template<typename T, typename TLength = size_t, class IAllocator = Allocator<T> >
+    template<typename T, typename TLength = size_t, class IAllocator = Allocator<T>, int options = 0>
     class List : public __li_base, public Iterable<T&, TLength>
     {
         protected:
@@ -66,11 +68,13 @@ namespace li
 
             class Iterator
             {
-                List<T, TLength, IAllocator>& list;
+                List<T, TLength, IAllocator, options>& list;
                 intptr_t i;
 
+                Iterator& operator = ( const Iterator& );
+
                 public:
-                    Iterator( List<T, TLength, IAllocator>& list, intptr_t i ) : list( list ), i( i ) {}
+                    Iterator( List<T, TLength, IAllocator, options>& list, intptr_t i ) : list( list ), i( i ) {}
 
                     operator T&() { return list.getUnsafe(i); }
                     T& operator -> () { return list.getUnsafe(i); }
@@ -91,11 +95,11 @@ namespace li
 
             class ConstIterator
             {
-                const List<T, TLength, IAllocator>& list;
+                const List<T, TLength, IAllocator, options>& list;
                 intptr_t i;
 
                 public:
-                    ConstIterator( const List<T, TLength, IAllocator>& list ) : list( list ), i( 0 ) {}
+                    ConstIterator( const List<T, TLength, IAllocator, options>& list ) : list( list ), i( 0 ) {}
 
                     operator const T&() { return list[i]; }
                     const T& operator -> () { return list[i]; }
@@ -126,18 +130,21 @@ namespace li
 
             TLength add( T&& item )
             {
-                this->get( length ) = ( T&& ) item;
+                this->resize( length + 1, true );
+                this->getUnsafe( length ) = ( T&& ) item;
                 return length++;
             }
 
             TLength add( const T& item )
             {
-                this->get( length ) = item;
+                this->resize( length + 1, true );
+                this->getUnsafe( length ) = item;
                 return length++;
             }
 
             T& addEmpty()
             {
+                this->resize( length + 1, true );
                 return this->get( length++ );
             }
 
@@ -178,6 +185,7 @@ namespace li
 
             T& getFromEnd( TLength field = 0 )
             {
+                // FIXME: Protection against negative calculated field
                 return this->get( length - field - 1 );
             }
 
@@ -289,6 +297,8 @@ namespace li
 
     	    List<T>& operator = ( const List<T>& other )
     	    {
+                // TODO: Do this more efficiently
+
     	        clear();
 
     	        for ( unsigned i = 0; i < other.getLength(); i++ )
@@ -300,15 +310,16 @@ namespace li
 
     #undef __li_base
 
-    #define __li_base List<Reference<T>, TLength, IAllocator>
+    #define __li_base List<Reference<T>, TLength, IAllocator, options>
 
-    template<typename T, typename TLength = size_t, class IAllocator = Allocator<Reference<T> > >
+    template<typename T, typename TLength = size_t, class IAllocator = Allocator<Reference<T> >, int options = 0>
     class ReferenceList : public __li_base
     {
         public:
             TLength add( T* item )
             {
-                this->get( this->length ) = item;
+                this->resize( length + 1, true );
+                this->getUnsafe( this->length ) = item;
                 return this->length++;
             }
 

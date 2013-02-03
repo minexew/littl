@@ -46,6 +46,8 @@ namespace li
                     }
                 }
 
+                Iterator operator = ( const Iterator& );
+
                 public:
                     Iterator( HashMap<Key, Value, Hash, getHash, Size>& hashMap ) : hashMap( hashMap ), bucket( 0 ), i( 0 )
                     {

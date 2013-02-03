@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2008-2011 Xeatheran Minexew
+    Copyright (c) 2008-2013 Xeatheran Minexew
 
     This software is provided 'as-is', without any express or implied
     warranty. In no event will the authors be held liable for any damages
@@ -264,7 +264,7 @@ namespace li
                 uint8_t buffer[0x1000];
                 size_t total = 0;
 
-                while ( true )
+                for ( ; ; )
                 {
                     size_t have = input->read( buffer, sizeof( buffer ) );
 
