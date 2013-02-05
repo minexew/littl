@@ -162,6 +162,12 @@ namespace li
                 return handle != 0;
             }
 
+            static bool moveFile( const char* fileName, const char* newFileName )
+            {
+                remove( newFileName );
+                return rename( fileName, newFileName ) == 0;
+            }
+
             static bool queryFileSize( const char* fileName, uint64_t& fileSize )
             {
 #ifdef __li_MSW

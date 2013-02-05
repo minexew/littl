@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2011 Xeatheran Minexew
+    Copyright (c) 2011, 2013 Xeatheran Minexew
 
     This software is provided 'as-is', without any express or implied
     warranty. In no event will the authors be held liable for any damages
@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <littl/Base.hpp>
 #include <littl/Exception.hpp>
 #include <littl/List.hpp>
 #include <littl/String.hpp>
@@ -39,6 +40,27 @@
     try\
     {\
         real_main_( argv[0], ( li::List<li::String>&& ) args );\
+    }\
+    catch ( li::Exception ex )\
+    {\
+        ex.print();\
+    }\
+\
+    printf( "\n" );\
+    return 0;\
+}
+
+#define li_main_class_( main_class_ ) extern "C" int main( int argc, char** argv )\
+{\
+    li::List<li::String> args;\
+\
+    for ( int i = 1; i < argc; i++ )\
+        args.add( argv[i] );\
+\
+    try\
+    {\
+        li::Object<main_class_> mc = new main_class_();\
+        mc->appmain( argv[0], ( li::List<li::String>&& ) args );\
     }\
     catch ( li::Exception ex )\
     {\
