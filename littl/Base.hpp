@@ -121,6 +121,13 @@ using std::ptrdiff_t;
 
 namespace li
 {
+    template<size_t alignment, typename Type> inline Type align( Type value )
+    {
+        static_assert(alignment && !(alignment & (alignment - 1)), "alignment must be power of 2");
+        
+        return ( value + alignment - 1 ) & ~( alignment - 1 );
+    }
+    
     template<typename Type> inline Type limitTo( Type value, Type min, Type max )
     {
         if ( value < min )
