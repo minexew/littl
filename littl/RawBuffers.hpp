@@ -58,7 +58,7 @@ namespace li
     template <typename T> class BufferReader : public BufferReaderBase<T>
     {
         public:
-            BufferReader(const T* buffer) : BufferReaderBase(buffer)
+            BufferReader(const T* buffer) : BufferReaderBase<T>(buffer)
             {
             }
     };
@@ -113,7 +113,7 @@ namespace li
     template <typename T> class BufferWriter : public BufferWriterBase<T>
     {
         public:
-            BufferWriter(T* buffer) : BufferWriterBase(buffer)
+            BufferWriter(T* buffer) : BufferWriterBase<T>(buffer)
             {
             }
     };
