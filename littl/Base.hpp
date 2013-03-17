@@ -34,9 +34,12 @@
 #include <stdint.h>
 #include <typeinfo>
 
+#define li_little_endian
+
 // basic platform-related stuff
 #if ( defined( __WINDOWS__ ) || defined( _WIN32 ) || defined( _WIN64 ) )
 // MS Windows
+#define WINVER 0x0501
 #include <windows.h>
 
 #define __li_MSW
@@ -124,10 +127,10 @@ namespace li
     template<size_t alignment, typename Type> inline Type align( Type value )
     {
         static_assert(alignment && !(alignment & (alignment - 1)), "alignment must be power of 2");
-        
+
         return ( value + alignment - 1 ) & ~( alignment - 1 );
     }
-    
+
     template<typename Type> inline Type limitTo( Type value, Type min, Type max )
     {
         if ( value < min )
@@ -427,5 +430,5 @@ namespace li
 #endif
     }
 
-    static inline void throwException(const char* functionName, const char* name, const char* description);
+    inline void throwException(const char* functionName, const char* name, const char* description);
 }

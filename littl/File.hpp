@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2008-2012 Xeatheran Minexew
+    Copyright (c) 2008-2013 Xeatheran Minexew
 
     This software is provided 'as-is', without any express or implied
     warranty. In no event will the authors be held liable for any damages
@@ -37,7 +37,10 @@ namespace li
     class File: public SeekableIOStream
     {
         private:
+            enum LastAccess { Access_none, Access_read, Access_write };
+
             FILE* handle;
+            LastAccess lastAccess;
 
         protected:
             File( const char* fileName, const char* mode = "rb" )
@@ -56,6 +59,7 @@ namespace li
 
     		File( FILE* handle ) : handle( handle )
     		{
+    		    lastAccess = Access_none;
             }
 
             static File* open( const char* fileName, bool forWriting = false, bool required = false )
@@ -144,6 +148,8 @@ namespace li
                 fseek( handle, latestPos, SEEK_SET );
 #endif
 
+                lastAccess = Access_none;
+
                 return size;
             }
 
@@ -182,7 +188,7 @@ namespace li
                 fileSize = li.QuadPart;
                 return true;
 #else
-                struct stat st; 
+                struct stat st;
 
                 if ( stat( fileName, &st ) == 0 )
                 {
@@ -196,17 +202,27 @@ namespace li
 
             virtual size_t rawRead( void* out, size_t readSize )
             {
+                if ( lastAccess == Access_write )
+                    fflush( handle );
+
+                lastAccess = Access_read;
+
                 return fread( out, 1, readSize, handle );
             }
 
             virtual size_t rawWrite( const void* in, size_t writeSize )
             {
+                if ( lastAccess == Access_read )
+                    fflush( handle );
+
+                lastAccess = Access_write;
+
                 return fwrite( in, 1, writeSize, handle );
             }
 
             virtual size_t read( void* out, size_t readSize )
             {
-                return fread( out, 1, readSize, handle );
+                return rawRead( out, readSize );
             }
 
             static String read( const char* fileName )

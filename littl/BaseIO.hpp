@@ -109,6 +109,12 @@ namespace li
                 return temp;
             }
 
+            template <typename T> bool readLE(T* value)
+            {
+                static_assert(sizeof(T) == 0, "Not implemented for this data type");
+                return false;
+            }
+
             template <typename T> size_t readItems( T* out, size_t count )
             {
                 return rawRead( out, count * sizeof( T ) ) / sizeof( T );
@@ -303,6 +309,12 @@ namespace li
             template <typename T> size_t write( const T& what )
             {
                 return write( &what, sizeof( what ) );
+            }
+
+            template <typename T> bool writeLE(const T value)
+            {
+                static_assert(sizeof(T) == 0, "Not implemented for this data type");
+                return false;
             }
 
     	    bool write( const String& text )
@@ -545,7 +557,7 @@ namespace li
             {
                 if ( pos > segmentLength )
                     pos = segmentLength;
-               
+
                 this->pos = pos;
                 return stream->setPos( segmentOffset + pos );
             }
@@ -577,4 +589,36 @@ namespace li
     {
         return output && output->isWritable();
     }
+
+#ifdef li_little_endian
+    template<> inline bool InputStream::readLE<uint16_t>(uint16_t* value)
+    {
+        return readItems(value, 1) == 1;
+    }
+
+    template<> inline bool InputStream::readLE<uint32_t>(uint32_t* value)
+    {
+        return readItems(value, 1) == 1;
+    }
+
+    template<> inline bool InputStream::readLE<uint64_t>(uint64_t* value)
+    {
+        return readItems(value, 1) == 1;
+    }
+
+    template<> inline bool OutputStream::writeLE<uint16_t>(uint16_t value)
+    {
+        return writeItems(&value, 1) == 1;
+    }
+
+    template<> inline bool OutputStream::writeLE<uint32_t>(uint32_t value)
+    {
+        return writeItems(&value, 1) == 1;
+    }
+
+    template<> inline bool OutputStream::writeLE<uint64_t>(uint64_t value)
+    {
+        return writeItems(&value, 1) == 1;
+    }
+#endif
 }
