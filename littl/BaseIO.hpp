@@ -591,6 +591,11 @@ namespace li
     }
 
 #ifdef li_little_endian
+    template<> inline bool InputStream::readLE<uint8_t>(uint8_t* value)
+    {
+        return readItems(value, 1) == 1;
+    }
+    
     template<> inline bool InputStream::readLE<uint16_t>(uint16_t* value)
     {
         return readItems(value, 1) == 1;
@@ -604,6 +609,11 @@ namespace li
     template<> inline bool InputStream::readLE<uint64_t>(uint64_t* value)
     {
         return readItems(value, 1) == 1;
+    }
+
+    template<> inline bool OutputStream::writeLE<uint8_t>(uint8_t value)
+    {
+        return writeItems(&value, 1) == 1;
     }
 
     template<> inline bool OutputStream::writeLE<uint16_t>(uint16_t value)
