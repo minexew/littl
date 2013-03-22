@@ -487,11 +487,11 @@ namespace li
 
         numChars = -1;
 
-        setBuffer( this->numBytes + numBytes + 1 );
+        setBuffer( this->numBytes + numBytes );
         memcpy( data + this->numBytes, stringUtf8, numBytes );
         
         this->numBytes += numBytes;
-        data[this->numBytes - 1] = 0;
+        data[this->numBytes] = 0;
     }
 
     __li_member( void ) append( const StringTpl& other )
