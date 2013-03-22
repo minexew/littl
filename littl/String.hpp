@@ -131,6 +131,7 @@ namespace li
             void append( Utf8Char c );
             void append( const Utf8Character& c );
             void append( const char* stringUtf8 );
+            void append( const char* stringUtf8, size_t numBytes );
             void append( const StringTpl& other );
             bool beginsWith( Utf8Char c ) const;
             bool beginsWith( const StringTpl& other ) const;
@@ -474,9 +475,23 @@ namespace li
         size_t numBytesInc = strlen( stringUtf8 );
 
         setBuffer( numBytes + numBytesInc + 1 );
-        strncpy( data + numBytes, stringUtf8, numBytesInc + 1 );
+        memcpy( data + numBytes, stringUtf8, numBytesInc + 1 );
 
         numBytes += numBytesInc;
+    }
+
+    __li_member( void ) append( const char* stringUtf8, size_t numBytes )
+    {
+        if ( !stringUtf8 || !*stringUtf8 )
+            return;
+
+        numChars = -1;
+
+        setBuffer( this->numBytes + numBytes + 1 );
+        memcpy( data + this->numBytes, stringUtf8, numBytes );
+        
+        this->numBytes += numBytes;
+        data[this->numBytes - 1] = 0;
     }
 
     __li_member( void ) append( const StringTpl& other )
