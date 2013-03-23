@@ -611,6 +611,26 @@ namespace li
         return readItems(value, 1) == 1;
     }
 
+    template<> inline bool InputStream::readLE<int8_t>(int8_t* value)
+    {
+        return readItems(value, 1) == 1;
+    }
+
+    template<> inline bool InputStream::readLE<int16_t>(int16_t* value)
+    {
+        return readItems(value, 1) == 1;
+    }
+
+    template<> inline bool InputStream::readLE<int32_t>(int32_t* value)
+    {
+        return readItems(value, 1) == 1;
+    }
+
+    template<> inline bool InputStream::readLE<int64_t>(int64_t* value)
+    {
+        return readItems(value, 1) == 1;
+    }
+
     template<> inline bool OutputStream::writeLE<uint8_t>(uint8_t value)
     {
         return writeItems(&value, 1) == 1;
@@ -627,6 +647,26 @@ namespace li
     }
 
     template<> inline bool OutputStream::writeLE<uint64_t>(uint64_t value)
+    {
+        return writeItems(&value, 1) == 1;
+    }
+
+    template<> inline bool OutputStream::writeLE<int8_t>(int8_t value)
+    {
+        return writeItems(&value, 1) == 1;
+    }
+
+    template<> inline bool OutputStream::writeLE<int16_t>(int16_t value)
+    {
+        return writeItems(&value, 1) == 1;
+    }
+
+    template<> inline bool OutputStream::writeLE<int32_t>(int32_t value)
+    {
+        return writeItems(&value, 1) == 1;
+    }
+
+    template<> inline bool OutputStream::writeLE<int64_t>(int64_t value)
     {
         return writeItems(&value, 1) == 1;
     }
