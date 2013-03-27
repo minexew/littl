@@ -122,6 +122,8 @@ using std::ptrdiff_t;
 
 #define li_tryCall(object_, method_) { if ((object_) != nullptr) (object_)->method_; }
 
+#define li_Reference2(T, method) Reference<T, DereferencePointerType<decltype(ExtractClassPointerTypeFromMethodPointer(method))>::Type, method>
+
 namespace li
 {
     template<size_t alignment, typename Type> inline Type align( Type value )
@@ -181,6 +183,20 @@ namespace li
         p->~Type();
     }
 
+    template<typename TypeIn> struct CopyType
+    {
+        typedef TypeIn Type;
+    };
+
+    template<typename PointerType> struct DereferencePointerType;
+
+    template<typename PointerType> struct DereferencePointerType<PointerType*>
+    {
+        typedef PointerType Type;
+    };
+
+    template <class ClassName> auto ExtractClassPointerTypeFromMethodPointer(void (ClassName::*)()) -> ClassName*;
+    
     class ReferencedClass
     {
         size_t referenceCount;
@@ -242,7 +258,16 @@ namespace li
         }
     }
 
-    template <class T = ReferencedClass> class Reference
+    template <class T, class RT, void (RT::*method)()> void release2( T*& c )
+    {
+        if ( c != nullptr )
+        {
+            (c->*method)();
+            c = nullptr;
+        }
+    }
+
+    template <class T = ReferencedClass, class RT = ReferencedClass, void (RT::*method)() = &RT::release> class Reference
     {
         protected:
             T* instance;
@@ -277,7 +302,7 @@ namespace li
 
             void release()
             {
-                li::release( instance );
+                li::release2<T, RT, method>( instance );
             }
 
             Reference<T>& operator = ( T* instance )
