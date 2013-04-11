@@ -150,8 +150,6 @@ namespace cfx2
 
             void merge( cfx2::Node with )
             {
-                //node = cfx2_merge_nodes( node, with.node );
-
                 cfx2_merge_nodes_2( node, with.node, &node, cfx2_release_left | cfx2_release_right );
             }
 
@@ -167,14 +165,19 @@ namespace cfx2
                 return ( value != nullptr ) ? value : defaultValue;
             }
 
-            void setAttrib( const char* name, const char* value )
-            {
-                cfx2_set_node_attrib( node, name, value );
-            }
-
             void release()
             {
                 cfx2_release_node( node );
+            }
+
+            void removeChild( Node child )
+            {
+                cfx2_remove_child( node, child.node );
+            }
+
+            void setAttrib( const char* name, const char* value )
+            {
+                cfx2_set_node_attrib( node, name, value );
             }
 
             operator bool ()
