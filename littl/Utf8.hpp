@@ -14,7 +14,10 @@ namespace li
         public:
             typedef unsigned Char;
 
-            static const Char invalidChar = 0xFFFFFFFF;
+            static const Char backspaceChar =   0x00000008;
+            static const Char tabChar =         0x00000009;
+            static const Char lineFeedChar =    0x0000000A;
+            static const Char invalidChar =     0xFFFFFFFF;
 
             struct Character
             {
