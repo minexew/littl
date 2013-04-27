@@ -273,18 +273,18 @@ namespace li
             T* instance;
 
         private:
-            Reference( const Reference<T>& other );
+            Reference( const Reference& other );
 
         public:
             Reference( T* instance = 0 ) : instance( instance )
             {
             }
 
-            Reference( Reference<T>& other ) : instance( other->reference() )
+            Reference( Reference& other ) : instance( other->reference() )
             {
             }
 
-            Reference( Reference<T>&& other ) : instance( other.detach() )
+            Reference( Reference&& other ) : instance( other.detach() )
             {
             }
 
@@ -305,7 +305,7 @@ namespace li
                 li::release2<T, RT, method>( instance );
             }
 
-            Reference<T>& operator = ( T* instance )
+            Reference<T, RT, method>& operator = ( T* instance )
             {
                 release();
                 this->instance = instance;
@@ -313,7 +313,7 @@ namespace li
                 return *this;
             }
 
-            Reference<T>& operator = ( Reference<T>&& other )
+            Reference<T, RT, method>& operator = ( Reference<T>&& other )
             {
                 release();
                 this->instance = other.detach();
@@ -385,48 +385,6 @@ namespace li
             Class* operator -> () { return ptr; }
             const Class* operator -> () const { return ptr; }
     };
-
-    /*template <class T> class Var
-    {
-        T value;
-
-        public:
-            Var( T value = 0 ) : value( value )
-            {
-            }
-
-            operator T& ()
-            {
-                return value;
-            }
-
-            operator const T& () const
-            {
-                return value;
-            }
-
-            Var<T>& operator = ( T value )
-            {
-                this->value = value;
-
-                return *this;
-            }
-
-            T operator -> ()
-            {
-#ifdef li_MSW
-                if ( !value )
-                    MessageBoxA( 0, "Dereferencing null pointer!", "li::Reference", MB_ICONERROR );
-#endif
-
-                return value;
-            }
-
-            template <typename T2> T operator + ( const T2& other )
-            {
-                return value + other;
-            }
-    };*/
 
     inline void pauseThread( unsigned milliSeconds )
     {
