@@ -582,25 +582,25 @@ namespace li
 #endif
     }
 
-    inline void interlockedDecrement(volatile int32_t* a_ptr)
+    inline int32_t interlockedDecrement(volatile int32_t* a_ptr)
     {
 #ifdef li_MSW
-        InterlockedDecrement((unsigned*) a_ptr);
+        return InterlockedDecrement((unsigned*) a_ptr);
 #elif defined(li_Apple)
-        OSAtomicDecrement32(a_ptr);
+        return OSAtomicDecrement32(a_ptr);
 #else
-        __sync_fetch_and_sub(a_ptr, 1);
+        return __sync_fetch_and_sub(a_ptr, 1);
 #endif
     }
 
-    inline void interlockedIncrement(volatile int32_t* a_ptr)
+    inline int32_t interlockedIncrement(volatile int32_t* a_ptr)
     {
 #ifdef li_MSW
-        InterlockedIncrement((unsigned*) a_ptr);
+        return InterlockedIncrement((unsigned*) a_ptr);
 #elif defined(li_Apple)
-        OSAtomicIncrement32(a_ptr);
+        return OSAtomicIncrement32(a_ptr);
 #else
-        __sync_fetch_and_add(a_ptr, 1);
+        return __sync_fetch_and_add(a_ptr, 1);
 #endif
     }
 }
