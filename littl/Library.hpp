@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2011 Xeatheran Minexew
+    Copyright (C) 2011, 2013 Xeatheran Minexew
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -24,24 +24,41 @@
 
 #include <littl/Base.hpp>
 
+#ifndef li_MSW
+#include <dlfcn.h>
+#endif
+
 namespace li
 {
     class Library
     {
         protected:
+#ifdef li_MSW
             HINSTANCE instance;
 
             Library( HINSTANCE instance )
                     : instance( instance )
             {
             }
+#else
+            void* instance;
+        
+            Library( void* instance )
+                : instance( instance )
+            {
+            }
+#endif
 
         public:
             static Library* open( const char* fileName )
             {
+#ifdef li_MSW
                 HINSTANCE instance = LoadLibraryA( fileName );
+#else
+                void* instance = dlopen( fileName, RTLD_LAZY );
+#endif
 
-                if ( instance )
+                if ( instance != nullptr )
                     return new Library( instance );
                 else
                     return nullptr;
@@ -49,13 +66,21 @@ namespace li
 
             ~Library()
             {
-                if ( instance )
+                if ( instance != nullptr )
+#ifdef li_MSW
                     FreeLibrary( instance );
+#else
+                    dlclose( instance );
+#endif
             }
 
             template<typename T> T getEntry( const char* name )
             {
+#ifdef li_MSW
                 return ( T ) GetProcAddress( instance, name );
+#else
+                return ( T ) dlsym( instance, name );
+#endif
             }
     };
 }
