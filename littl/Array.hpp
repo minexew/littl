@@ -37,7 +37,7 @@ namespace li
     {
         enum
         {
-            noOverflowCheck = 1
+            noBoundsChecking = 1
         };
     }
 
@@ -124,7 +124,7 @@ namespace li
 
     __li_member( T& ) get( TCapacity field )
     {
-        if ( !( options & ArrayOptions::noOverflowCheck ) )
+        if ( !( options & ArrayOptions::noBoundsChecking ) )
         {
             if ( field >= capacity )
                 resize( field * 2 + 1 );
@@ -135,7 +135,7 @@ namespace li
 
     __li_member( T* ) getPtr( TCapacity field )
     {
-        if ( !( options & ArrayOptions::noOverflowCheck ) )
+        if ( !( options & ArrayOptions::noBoundsChecking ) )
         {
             if ( field >= capacity )
                 resize( field * 2 + 1 );
@@ -146,7 +146,7 @@ namespace li
 
     __li_member( const T& ) get( TCapacity field ) const
     {
-        if ( !( options & ArrayOptions::noOverflowCheck ) )
+        if ( !( options & ArrayOptions::noBoundsChecking ) )
         {
             if ( field >= capacity )
                 throwException( "li.Array.get(const)", "IndexOutOfBounds", "Specified index is outside array bounds" );
@@ -213,7 +213,7 @@ namespace li
 
     __li_member( void ) set( TCapacity field, const T& value )
     {
-        if ( !( options & ArrayOptions::noOverflowCheck ) )
+        if ( !( options & ArrayOptions::noBoundsChecking ) )
         {
             if ( field >= capacity )
                 resize( field + 1 );
@@ -224,6 +224,11 @@ namespace li
 
 #undef __li_member
 #undef __li_member_
+
+    template<typename T, typename TCapacity = size_t, class IAllocator = Allocator<T>, int options = 0>
+    class UncheckedArray : public Array<T, TCapacity, IAllocator, options | ArrayOptions::noBoundsChecking>
+    {
+    };
 }
 
 #pragma warning ( pop )

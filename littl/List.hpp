@@ -308,9 +308,9 @@ namespace li
     	    }
     };
 
-    #undef __li_base
+#undef __li_base
 
-    #define __li_base List<Reference<T>, TLength, IAllocator, options>
+#define __li_base List<Reference<T>, TLength, IAllocator, options>
 
     template<typename T, typename TLength = size_t, class IAllocator = Allocator<Reference<T> >, int options = 0>
     class ReferenceList : public __li_base
@@ -349,5 +349,10 @@ namespace li
             }
     };
 
-    #undef __li_base
+#undef __li_base
+
+    template<typename T, typename TLength = size_t, class IAllocator = Allocator<T>, int options = 0>
+    class UncheckedList : public List<T, TLength, IAllocator, options | ArrayOptions::noBoundsChecking>
+    {
+    };
 }
