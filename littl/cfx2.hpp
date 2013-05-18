@@ -143,6 +143,11 @@ namespace cfx2
                 return node->text;
             }
 
+            bool hasAttrib( const char* name )
+            {
+                return cfx2_find_attrib( node, name ) != nullptr;
+            }
+
             bool isNull()
             {
                 return node == nullptr;

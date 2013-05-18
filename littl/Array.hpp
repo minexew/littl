@@ -41,6 +41,8 @@ namespace li
         };
     }
 
+#define li_this Array<T, TCapacity, IAllocator, options>
+
     template<typename T, typename TCapacity = size_t, class IAllocator = Allocator<T>, int options = 0>
     class Array
     {
@@ -49,10 +51,11 @@ namespace li
 
         public:
             Array( TCapacity initialCapacity = 0 );
-            Array( Array<T>&& other );
-            Array( const Array<T>& other );
-            Array<T>& operator = ( const Array<T>& );
-            virtual ~Array();
+            Array( li_this&& other );
+            Array( const li_this& other );
+            li_this& operator = ( const li_this& );
+            li_this& operator = ( li_this&& );
+            ~Array();
 
             T* c_array() { return data; }
             const T* c_array() const { return data; }
@@ -77,10 +80,10 @@ namespace li
             T* operator * () { return data; }
     };
 
-#define __li_member( type ) template<typename T, typename TCapacity, class IAllocator, int options> type Array<T, TCapacity, IAllocator, options>::
-#define __li_member_ template<typename T, typename TCapacity, class IAllocator, int options> Array<T, TCapacity, IAllocator, options>::
+#define li_member( type ) template<typename T, typename TCapacity, class IAllocator, int options> type Array<T, TCapacity, IAllocator, options>::
+#define li_member_ template<typename T, typename TCapacity, class IAllocator, int options> Array<T, TCapacity, IAllocator, options>::
 
-    __li_member_ Array( TCapacity initialCapacity ) : data( 0 ), capacity( initialCapacity )
+    li_member_ Array( TCapacity initialCapacity ) : data( 0 ), capacity( initialCapacity )
     {
         data = ( T* )IAllocator::allocate( capacity );
 
@@ -88,24 +91,18 @@ namespace li
             constructPointer( data + i );
     }
 
-    __li_member_ Array( Array<T>&& other ) : data( other.data ), capacity( other.capacity )
+    li_member_ Array( li_this&& other ) : data( other.data ), capacity( other.capacity )
     {
         other.data = nullptr;
         other.capacity = 0;
     }
 
-    __li_member_ Array( const Array<T>& other ) : data( 0 ), capacity( 0 )
+    li_member_ Array( const li_this& other ) : data( 0 ), capacity( 0 )
     {
         load( other.data, other.capacity );
     }
 
-    __li_member( Array<T>& ) operator = ( const Array<T>& other )
-    {
-        load( other.data, other.capacity );
-        return *this;
-    }
-
-    __li_member_ ~Array()
+    li_member_ ~Array()
     {
         for ( unsigned i = 0; i < capacity; i++ )
             destructPointer( data + i );
@@ -113,7 +110,25 @@ namespace li
         IAllocator::release( data );
     }
 
-    __li_member( T* ) detachData()
+    li_member( li_this& ) operator = ( const li_this& other )
+    {
+        load( other.data, other.capacity );
+        return *this;
+    }
+
+    li_member( li_this& ) operator = ( li_this&& other )
+    {
+        resize( 0, false );
+
+        data = other.data;
+        capacity = other.capacity;
+        other.data = nullptr;
+        other.capacity = 0;
+
+        return *this;
+    }
+
+    li_member( T* ) detachData()
     {
         T* ptr = data;
 
@@ -122,29 +137,29 @@ namespace li
         return ptr;
     }
 
-    __li_member( T& ) get( TCapacity field )
+    li_member( T& ) get( TCapacity field )
     {
         if ( !( options & ArrayOptions::noBoundsChecking ) )
         {
             if ( field >= capacity )
-                resize( field * 2 + 1 );
+                resize( li::maximum<TCapacity>( field * 4 / 3, 4 ) );
         }
 
         return data[field];
     }
 
-    __li_member( T* ) getPtr( TCapacity field )
+    li_member( T* ) getPtr( TCapacity field )
     {
         if ( !( options & ArrayOptions::noBoundsChecking ) )
         {
             if ( field >= capacity )
-                resize( field * 2 + 1 );
+                resize( li::maximum<TCapacity>( field * 4 / 3, 4 ) );
         }
 
-        return data + field;
+        return &data[field];
     }
 
-    __li_member( const T& ) get( TCapacity field ) const
+    li_member( const T& ) get( TCapacity field ) const
     {
         if ( !( options & ArrayOptions::noBoundsChecking ) )
         {
@@ -155,13 +170,13 @@ namespace li
         return data[field];
     }
 
-    __li_member( void ) load( const T* source, TCapacity count, TCapacity offset )
+    li_member( void ) load( const T* source, TCapacity count, TCapacity offset )
     {
         resize( offset + count );
         IAllocator::move( data + offset, source, count );
     }
 
-    __li_member( void ) move( TCapacity destField, TCapacity srcField, TCapacity length )
+    li_member( void ) move( TCapacity destField, TCapacity srcField, TCapacity length )
     {
         if ( destField == srcField )
             return;
@@ -190,7 +205,7 @@ namespace li
                 constructPointer( data + i );
     }
 
-    __li_member( void ) resize( TCapacity newCapacity, bool lazy )
+    li_member( void ) resize( TCapacity newCapacity, bool lazy )
     {
         if ( !lazy || newCapacity > capacity )
         {
@@ -211,7 +226,7 @@ namespace li
         }
     }
 
-    __li_member( void ) set( TCapacity field, const T& value )
+    li_member( void ) set( TCapacity field, const T& value )
     {
         if ( !( options & ArrayOptions::noBoundsChecking ) )
         {
@@ -222,8 +237,10 @@ namespace li
         data[field] = value;
     }
 
-#undef __li_member
-#undef __li_member_
+#undef li_member
+#undef li_member_
+
+#undef li_this
 
     template<typename T, typename TCapacity = size_t, class IAllocator = Allocator<T>, int options = 0>
     class UncheckedArray : public Array<T, TCapacity, IAllocator, options | ArrayOptions::noBoundsChecking>

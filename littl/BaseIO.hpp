@@ -488,6 +488,32 @@ namespace li
                 return length;
             }
 
+            virtual size_t rawWrite( const void* input, size_t length )
+            {
+                if ( index + length > size )
+                {
+                    size = index + length;
+                    resize( size, true );
+                }
+
+                memcpy( getPtrUnsafe( index ), input, length );
+                index += length;
+                return length;
+            }
+
+            virtual void* rawWriteEmpty( size_t length )
+            {
+                if ( index + length > size )
+                {
+                    size = index + length;
+                    resize( size, true );
+                }
+
+                void* ret = getPtrUnsafe( index );
+                index += length;
+                return ret;
+            }
+
             template <typename T> T* readObject()
             {
                 if ( index + sizeof( T ) > size )
@@ -497,11 +523,6 @@ namespace li
                 index += sizeof( T );
                 return obj;
             }
-
-            /*virtual size_t rawWrite( const void* in, size_t length )
-            {
-                return write( in, length );
-            }*/
 
             virtual bool setPos( uint64_t pos )
             {
@@ -514,17 +535,9 @@ namespace li
                 this->size = size;
             }
 
-            virtual size_t rawWrite( const void* input, size_t length )
+            template <typename T> T* writeItemsEmpty( size_t count )
             {
-                if ( index + length > size )
-                {
-                    size = index + length;
-                    resize( size, true );
-                }
-
-                memcpy( getPtrUnsafe( index ), input, length );
-                index += length;
-                return length;
+                return reinterpret_cast<T*>( rawWriteEmpty( count * sizeof( T ) ) );
             }
     };
 

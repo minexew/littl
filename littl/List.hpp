@@ -41,8 +41,6 @@
 
 namespace li
 {
-#define __li_base Array<T, TLength, IAllocator, options>
-
     template <typename T, typename TLength> class Iterable
     {
         intptr_t iterator;
@@ -59,8 +57,11 @@ namespace li
     	    T current() { return iterableGetItem( iterator ); }
     };
 
+#define li_base Array<T, TLength, IAllocator, options>
+#define li_this List<T, TLength, IAllocator, options>
+
     template<typename T, typename TLength = size_t, class IAllocator = Allocator<T>, int options = 0>
-    class List : public __li_base, public Iterable<T&, TLength>
+    class List : public li_base, public Iterable<T&, TLength>
     {
         protected:
         public:
@@ -68,13 +69,13 @@ namespace li
 
             class Iterator
             {
-                List<T, TLength, IAllocator, options>& list;
+                li_this& list;
                 intptr_t i;
 
                 Iterator& operator = ( const Iterator& );
 
                 public:
-                    Iterator( List<T, TLength, IAllocator, options>& list, intptr_t i ) : list( list ), i( i ) {}
+                    Iterator( li_this& list, intptr_t i ) : list( list ), i( i ) {}
 
                     operator T&() { return list.getUnsafe(i); }
                     T& operator -> () { return list.getUnsafe(i); }
@@ -95,11 +96,11 @@ namespace li
 
             class ConstIterator
             {
-                const List<T, TLength, IAllocator, options>& list;
+                const li_this& list;
                 intptr_t i;
 
                 public:
-                    ConstIterator( const List<T, TLength, IAllocator, options>& list ) : list( list ), i( 0 ) {}
+                    ConstIterator( const li_this& list ) : list( list ), i( 0 ) {}
 
                     operator const T&() { return list[i]; }
                     const T& operator -> () { return list[i]; }
@@ -113,17 +114,17 @@ namespace li
 
         public:
             List( TLength initial = 5 )
-                : __li_base( initial ), length( 0 )
+                : li_base( initial ), length( 0 )
             {
             }
 
-            List( List<T>&& other )
-                : __li_base( ( __li_base&& ) other ), length( other.length )
+            List( li_this&& other )
+                : li_base( ( li_base&& ) other ), length( other.length )
             {
             }
 
             List( const List<T>& other )
-                : __li_base( other.getLength() ), length( 0 )
+                : li_base( other.getLength() ), length( 0 )
             {
                 load( other );
             }
@@ -160,6 +161,14 @@ namespace li
                 length = 0;
             }
 
+            void deleteAllItems()
+            {
+                for ( TLength i = 0; i < length; i++ )
+                    delete this->getUnsafe( i );
+
+                setLength( 0, false );
+            }
+
             template <typename T2>
             intptr_t find( const T2& value )
             {
@@ -172,7 +181,7 @@ namespace li
                 return -1;
             }
 
-            TLength findEmpty() const
+            TLength findZero() const
             {
                 TLength i;
 
@@ -240,14 +249,14 @@ namespace li
 
             virtual T& iterableGetItem( TLength index )
             {
-                return __li_base::get( index );
+                return li_base::get( index );
             }
 
             void load( const T* source, TLength count, TLength offset = 0 )
             {
                 if ( count )
                 {
-                    __li_base::load( source, count, offset );
+                    li_base::load( source, count, offset );
                     length = maximum( length, offset + count );
                 }
             }
@@ -295,7 +304,7 @@ namespace li
                 this->length = length;
             }
 
-    	    List<T>& operator = ( const List<T>& other )
+    	    li_this& operator = ( const li_this& other )
     	    {
                 // TODO: Do this more efficiently
 
@@ -306,14 +315,25 @@ namespace li
 
                 return *this;
     	    }
+
+            li_this& operator = ( li_this&& other )
+    	    {
+                li_base::operator = ( ( li_base&& ) other );
+
+                length = other.length;
+                other.length = 0;
+
+                return *this;
+    	    }
     };
 
-#undef __li_base
+#undef li_base
+#undef li_this
 
-#define __li_base List<Reference<T>, TLength, IAllocator, options>
+#define li_base List<Reference<T>, TLength, IAllocator, options>
 
     template<typename T, typename TLength = size_t, class IAllocator = Allocator<Reference<T> >, int options = 0>
-    class ReferenceList : public __li_base
+    class ReferenceList : public li_base
     {
         public:
             TLength add( T* item )
@@ -349,10 +369,23 @@ namespace li
             }
     };
 
-#undef __li_base
+#undef li_base
+
+#define li_base List<T, TLength, IAllocator, options | ArrayOptions::noBoundsChecking>
+#define li_this UncheckedList<T, TLength, IAllocator, options>
 
     template<typename T, typename TLength = size_t, class IAllocator = Allocator<T>, int options = 0>
-    class UncheckedList : public List<T, TLength, IAllocator, options | ArrayOptions::noBoundsChecking>
+    class UncheckedList : public li_base
     {
+        public:
+            li_this& operator = ( li_this&& other )
+    	    {
+                li_base::operator = ( ( li_base&& ) other );
+
+                return *this;
+    	    }
     };
+
+#undef li_base
+#undef li_this
 }
