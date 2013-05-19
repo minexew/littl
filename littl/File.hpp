@@ -34,6 +34,26 @@
 
 namespace li
 {
+    struct FileStat
+    {
+        enum { is_file, is_directory };
+
+        int flags;
+        uint64_t sizeInBytes;
+        time_t creationTime, modificationTime;
+    };
+
+#ifdef __li_MSW
+    inline time_t FileTimeToTime_t( const FILETIME& ft )
+    {
+        ULARGE_INTEGER ull;
+        ull.LowPart = ft.dwLowDateTime;
+        ull.HighPart = ft.dwHighDateTime;
+
+        return ( time_t )( ull.QuadPart / 10000000ULL - 11644473600ULL );
+    }
+#endif
+
     class File: public SeekableIOStream
     {
         private:
@@ -176,28 +196,16 @@ namespace li
 
             static bool queryFileSize( const char* fileName, uint64_t& fileSize )
             {
-#ifdef __li_MSW
-                // TODO: Unicode filename support
-                HANDLE hFile = CreateFileA(fileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+                FileStat stat;
 
-                if (hFile == INVALID_HANDLE_VALUE)
+                if ( !statFileOrDirectory( fileName, &stat ) )
                     return false;
 
-                LARGE_INTEGER li;
-                GetFileSizeEx(hFile, &li);
-                fileSize = li.QuadPart;
+                if ( ( stat.flags & FileStat::is_file ) == 0 )
+                    return false;
+
+                fileSize = stat.sizeInBytes;
                 return true;
-#else
-                struct stat st;
-
-                if ( stat( fileName, &st ) == 0 )
-                {
-                    fileSize = st.st_size;
-                    return true;
-                }
-
-                return false;
-#endif
             }
 
             virtual size_t rawRead( void* out, size_t readSize )
@@ -248,6 +256,49 @@ namespace li
                 }
                 else
                     return false;
+            }
+
+            static bool statFileOrDirectory( const char* fileName, FileStat* stat_out )
+            {
+#ifdef __li_MSW
+                WIN32_FILE_ATTRIBUTE_DATA data;
+
+                // TODO: Unicode filename support
+                if ( !GetFileAttributesExA( fileName, GetFileExInfoStandard, &data ) )
+                    return false;
+
+                stat_out->flags = 0;
+
+                if ( data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+                    stat_out->flags |= FileStat::is_directory;
+                else
+                    stat_out->flags |= FileStat::is_file;
+
+                stat_out->sizeInBytes = ( ( uint64_t ) data.nFileSizeHigh << 32 ) | data.nFileSizeLow;
+                stat_out->creationTime = FileTimeToTime_t( data.ftCreationTime );
+                stat_out->modificationTime = FileTimeToTime_t( data.ftLastWriteTime );
+
+                return true;
+#else
+                struct stat st;
+
+                if ( stat( fileName, &st ) != 0 )
+                    return false;
+
+                stat_out->flags = 0;
+
+                if ( S_ISDIR( st.st_mode ) )
+                    stat_out->flags |= FileStat::is_directory;
+                else
+                    // assume regular file otherwise
+                    stat_out->flags |= FileStat::is_file;
+
+                stat_out->sizeInBytes = st.st_size;
+                stat_out->creationTime = st.st_ctime;
+                stat_out->modificationTime = st.st_mtime;
+
+                return true;
+#endif
             }
 
             static String load( const char* fileName )

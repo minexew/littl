@@ -146,7 +146,12 @@ namespace li
             static Directory* open( const char* path )
             {
 #ifdef li_MSW
-                if ( GetFileAttributesA( path ) & FILE_ATTRIBUTE_DIRECTORY )
+                DWORD attributes = GetFileAttributesA( path );
+
+                if ( attributes == INVALID_FILE_ATTRIBUTES )
+                    return nullptr;
+
+                if ( attributes & FILE_ATTRIBUTE_DIRECTORY )
                     return new Directory( path );
                 else
                     return nullptr;
