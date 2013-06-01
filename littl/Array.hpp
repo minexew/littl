@@ -80,8 +80,8 @@ namespace li
             T* operator * () { return data; }
     };
 
-#define li_member( type ) template<typename T, typename TCapacity, class IAllocator, int options> type Array<T, TCapacity, IAllocator, options>::
-#define li_member_ template<typename T, typename TCapacity, class IAllocator, int options> Array<T, TCapacity, IAllocator, options>::
+#define li_member( type ) template<typename T, typename TCapacity, class IAllocator, int options> type li_this::
+#define li_member_ template<typename T, typename TCapacity, class IAllocator, int options> li_this::
 
     li_member_ Array( TCapacity initialCapacity ) : data( 0 ), capacity( initialCapacity )
     {

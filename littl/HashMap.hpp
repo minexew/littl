@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2011, 2012 Xeatheran Minexew
+    Copyright (C) 2011, 2012, 2013 Xeatheran Minexew
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -24,8 +24,12 @@
 
 #include <littl/Allocator.hpp>
 
+#include <utility>
+
 namespace li
 {
+#define li_this HashMap<Key, Value, Hash, getHash, Size>
+
     template<typename Key, typename Value, typename Hash = uint32_t, Hash ( *getHash )( const Key& ) = Key::getHash, typename Size = uint32_t>
     class HashMap
     {
@@ -78,6 +82,9 @@ namespace li
             Bucket* buckets;
             Size numBuckets, numEntries, shiftAmount;
 
+            Pair* findPair( const Key& key );
+            bool getOrSetWithoutInitialization( Key&& key, Pair*& pair_out );
+
             static void releaseBuckets( Bucket* buckets, Size numBuckets );
 
         public:
@@ -90,25 +97,26 @@ namespace li
             Iterator getIterator() { return Iterator( *this ); }
             void printStatistics();
             void resize( Size shiftAmount, bool lazy = false );
-            Value* set( Key&& key, Value&& value );
+            Value& setEmpty( Key&& key );
+            Value& set( Key&& key, Value&& value );
             bool unset( Key&& key );
     };
 
-#define __li_member( type ) template<typename Key, typename Value, typename Hash, Hash ( *getHash )( const Key& ), typename Size> type HashMap<Key, Value, Hash, getHash, Size>::
-#define __li_member_ template<typename Key, typename Value, typename Hash, Hash ( *getHash )( const Key& ), typename Size> HashMap<Key, Value, Hash, getHash, Size>::
+#define li_member( type ) template<typename Key, typename Value, typename Hash, Hash ( *getHash )( const Key& ), typename Size> type li_this::
+#define li_member_ template<typename Key, typename Value, typename Hash, Hash ( *getHash )( const Key& ), typename Size> li_this::
 
-    __li_member_ HashMap( Size shiftAmount )
+    li_member_ HashMap( Size shiftAmount )
             : buckets( nullptr ), numBuckets( 0 ), numEntries( 0 ), shiftAmount( 0 )
     {
         resize( shiftAmount );
     }
 
-    __li_member_ ~HashMap()
+    li_member_ ~HashMap()
     {
         clear();
     }
 
-    __li_member( void ) clear()
+    li_member( void ) clear()
     {
         releaseBuckets( buckets, numBuckets );
 
@@ -118,21 +126,29 @@ namespace li
         shiftAmount = 0;
     }
 
-    __li_member( Value* ) find( const Key& key )
+    li_member( Value* ) find( const Key& key )
+    {
+        Pair* pair = findPair( key );
+
+        if ( pair != nullptr )
+            return &pair->value;
+        else
+            return nullptr;
+    }
+
+    li_member( typename li_this::Pair* ) findPair( const Key& key )
     {
         Hash hash = getHash( key );
         Bucket& bucket = buckets[hash & ( numBuckets - 1 )];
 
-        //printf( "HashMap.find(): Hash = %08X, bucket = %u\n", hash, hash & ( numBuckets - 1 ) );
-
         for ( Size i = 0; i < bucket.numEntries; i++ )
             if ( bucket.entries[i].hash == hash && bucket.entries[i].key == key )
-                return &bucket.entries[i].value;
+                return &bucket.entries[i];
 
         return nullptr;
     }
 
-    __li_member( Value ) get( const Key& key ) const
+    li_member( Value ) get( const Key& key ) const
     {
         Hash hash = getHash( key );
         Bucket& bucket = buckets[hash & ( numBuckets - 1 )];
@@ -144,7 +160,44 @@ namespace li
         return 0;
     }
 
-    __li_member( void ) printStatistics()
+    li_member( bool ) getOrSetWithoutInitialization( Key&& key, Pair*& pair_out )
+    {
+        //printf( "HashMap.set(): %u entries, %u buckets (%u/%u)\n", numEntries, numBuckets, numEntries, numBuckets * 4 );
+
+        pair_out = findPair( key );
+
+        if ( pair_out != nullptr )
+            return false;
+
+        if ( numEntries + 1 > numBuckets * 4 )
+            resize( shiftAmount + 2, false );
+
+        Hash hash = getHash( key );
+        Bucket& bucket = buckets[hash & ( numBuckets - 1 )];
+
+        //printf( "HashMap.add(): Hash = %08X, bucket = %u\n", hash, hash & ( numBuckets - 1 ) );
+
+        if ( bucket.numEntries + 1 >= bucket.capacity )
+        {
+            Size newCapacity = ( bucket.capacity == 0 ) ? 2 : bucket.capacity * 2;
+
+            //printf( "HashMap.add(): resizing bucket %u -> %u\n", bucket.capacity, newCapacity );
+
+            bucket.entries = Allocator<Pair>::resize( bucket.entries, newCapacity );
+            bucket.capacity = newCapacity;
+        }
+
+        bucket.numEntries++;
+        numEntries++;
+
+        constructPointer( &bucket.entries[bucket.numEntries - 1].key, std::forward<Key>( key ) );
+        constructPointer( &bucket.entries[bucket.numEntries - 1].hash, std::forward<Hash>( hash ) );
+
+        pair_out = &bucket.entries[bucket.numEntries - 1];
+        return true;
+    }
+
+    li_member( void ) printStatistics()
     {
         printf( "HashMap: %" PRIuPTR " buckets (shift = %" PRIuPTR "); %" PRIuPTR " entries\n", ( size_t ) this->numBuckets, ( size_t ) this->shiftAmount, ( size_t ) this->numEntries );
 
@@ -159,7 +212,7 @@ namespace li
         }
     }
 
-    __li_member( void ) releaseBuckets( Bucket* buckets, Size numBuckets )
+    li_member( void ) releaseBuckets( Bucket* buckets, Size numBuckets )
     {
         for ( Size i = 0; i < numBuckets; i++ )
         {
@@ -178,7 +231,7 @@ namespace li
         Allocator<Bucket>::release( buckets );
     }
 
-    __li_member( void ) resize( Size shiftAmount, bool lazy )
+    li_member( void ) resize( Size shiftAmount, bool lazy )
     {
         if ( shiftAmount == this->shiftAmount )
             return;
@@ -232,9 +285,9 @@ namespace li
                         bucket.capacity = newCapacity;
                     }
 
-                    constructPointer( &bucket.entries[bucket.numEntries].key, ( Key&& ) sourceBucket.entries[j].key );
-                    constructPointer( &bucket.entries[bucket.numEntries].value, ( Value&& ) sourceBucket.entries[j].value );
-                    constructPointer( &bucket.entries[bucket.numEntries].hash, ( Hash&& ) sourceBucket.entries[j].hash );
+                    constructPointer( &bucket.entries[bucket.numEntries].key,   std::move( sourceBucket.entries[j].key ) );
+                    constructPointer( &bucket.entries[bucket.numEntries].value, std::move( sourceBucket.entries[j].value ) );
+                    constructPointer( &bucket.entries[bucket.numEntries].hash,  std::move( sourceBucket.entries[j].hash ) );
 
                     bucket.numEntries++;
                 }
@@ -248,47 +301,29 @@ namespace li
         }
     }
 
-    __li_member( Value* ) set( Key&& key, Value&& value )
+    li_member( Value& ) set( Key&& key, Value&& value )
     {
-        //printf( "HashMap.set(): %u entries, %u buckets (%u/%u)\n", numEntries, numBuckets, numEntries, numBuckets * 4 );
+        Pair* pair;
+        
+        if ( !getOrSetWithoutInitialization( std::forward<Key>( key ), pair ) )
+            return pair->value;
 
-        Value* entry = find( key );
-
-        if ( entry != nullptr )
-        {
-            *entry = ( Value&& ) value;
-            return entry;
-        }
-
-        if ( numEntries + 1 > numBuckets * 4 )
-            resize( shiftAmount + 2, false );
-
-        Hash hash = getHash( key );
-        Bucket& bucket = buckets[hash & ( numBuckets - 1 )];
-
-        //printf( "HashMap.add(): Hash = %08X, bucket = %u\n", hash, hash & ( numBuckets - 1 ) );
-
-        if ( bucket.numEntries + 1 >= bucket.capacity )
-        {
-            Size newCapacity = ( bucket.capacity == 0 ) ? 2 : bucket.capacity * 2;
-
-            //printf( "HashMap.add(): resizing bucket %u -> %u\n", bucket.capacity, newCapacity );
-
-            bucket.entries = Allocator<Pair>::resize( bucket.entries, newCapacity );
-            bucket.capacity = newCapacity;
-        }
-
-        constructPointer( &bucket.entries[bucket.numEntries].key, ( Key&& ) key );
-        constructPointer( &bucket.entries[bucket.numEntries].value, ( Value&& ) value );
-        constructPointer( &bucket.entries[bucket.numEntries].hash, ( Hash&& ) hash );
-
-        bucket.numEntries++;
-        numEntries++;
-
-        return &bucket.entries[bucket.numEntries - 1].value;
+        constructPointer( &pair->value, std::forward<Value>( value ) );
+        return pair->value;
     }
 
-    __li_member( bool ) unset( Key&& key )
+    li_member( Value& ) setEmpty( Key&& key )
+    {
+        Pair* pair;
+        
+        if ( !getOrSetWithoutInitialization( std::forward<Key>( key ), pair ) )
+            return pair->value;
+
+        constructPointer( &pair->value );
+        return pair->value;
+    }
+
+    li_member( bool ) unset( Key&& key )
     {
         Hash hash = getHash( key );
         Bucket& bucket = buckets[hash & ( numBuckets - 1 )];
@@ -311,6 +346,6 @@ namespace li
         return false;
     }
     
-#undef __li_member
-#undef __li_member_
+#undef li_member
+#undef li_member_
 }

@@ -231,6 +231,7 @@ namespace li
                 if ( field < length )
                 {
                     this->move( field + 1, field, length - field );
+                    length++;
                     return this->getUnsafe( field );
                 }
                 else
