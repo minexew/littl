@@ -1,3 +1,26 @@
+/*
+    Copyright (c) 2008-2013 Xeatheran Minexew
+
+    This software is provided 'as-is', without any express or implied
+    warranty. In no event will the authors be held liable for any damages
+    arising from the use of this software.
+
+    Permission is granted to anyone to use this software for any purpose,
+    including commercial applications, and to alter it and redistribute it
+    freely, subject to the following restrictions:
+
+    1. The origin of this software must not be misrepresented; you must not
+    claim that you wrote the original software. If you use this software
+    in a product, an acknowledgment in the product documentation would be
+    appreciated but is not required.
+
+    2. Altered source versions must be plainly marked as such, and must not be
+    misrepresented as being the original software.
+
+    3. This notice may not be removed or altered from any source
+    distribution.
+*/
+
 #pragma once
 
 #ifdef _MSC_VER
@@ -39,7 +62,10 @@
 // basic platform-related stuff
 #if ( defined( __WINDOWS__ ) || defined( _WIN32 ) || defined( _WIN64 ) )
 // MS Windows
+#ifndef WINVER
+// TODO: Why are we setting this?
 #define WINVER 0x0501
+#endif
 #include <windows.h>
 
 #define __li_MSW
@@ -108,17 +134,23 @@ using std::ptrdiff_t;
 #define lengthof( array_ ) ( sizeof( array_ ) / sizeof( *( array_ ) ) )
 #endif
 
-#define repeat(__n) for ( unsigned __repeat_i = 0; __repeat_i < unsigned(__n); __repeat_i++ )
-#define repeat_i( n_, i_ ) for ( unsigned i_ = 0; i_ < unsigned( n_ ); i_++ )
-
 #ifndef li_avoid_libstdcxx
 #include <new>
 #endif
 
-#define li_ReferencedClass_override( ClassName ) ClassName* reference() { li::ReferencedClass::reference(); return this; }
+#define li_refcounted_class( ClassName )\
+    public:\
+        ClassName* reference() { ++this->referenceCount; return this; }\
+        virtual void release() override { if (--this->referenceCount == 0) delete this; }\
+    private:
+
+#define li_refcounted_class_partial( ClassName )\
+    public:\
+        ClassName* reference() { ++this->referenceCount; return this; }\
+    private:
 
 // Doesn't work in VS2010 nor GCC 4.6, but should in the future
-#define li_ReferencedClass_override2 auto reference() -> decltype(this) { li::ReferencedClass::reference(); return this; }
+//#define li_ReferencedClass_override2 auto reference() -> decltype(this) { li::ReferencedClass::reference(); return this; }
 
 #define li_tryCall(object_, method_) { if ((object_) != nullptr) (object_)->method_; }
 
@@ -197,24 +229,13 @@ namespace li
 
     template <class ClassName> auto ExtractClassPointerTypeFromMethodPointer(void (ClassName::*)()) -> ClassName*;
     
-    class ReferencedClass
+    class RefCountedClass
     {
-        size_t referenceCount;
-
         protected:
-            ReferencedClass() : referenceCount( 1 )
-            {
-                //puts( "++ REFC" );
-            }
+            int32_t referenceCount;
 
-            virtual ~ReferencedClass()
+            RefCountedClass() : referenceCount( 1 )
             {
-                //puts( "-- REFC" );
-            }
-
-            void reference()
-            {
-                referenceCount++;
             }
 
         public:
@@ -223,21 +244,12 @@ namespace li
                 return referenceCount > 1;
             }
 
-            void release()
+            void reference()
             {
-                //printf( "~ReferencedClass<%s> %" PRIuPTR " -> %" PRIuPTR "\n", typeid( *this ).name(), referenceCount, referenceCount - 1 );
-
-#ifdef li_MSW
-                if ( referenceCount <= 0 )
-                {
-                    MessageBoxA( 0, "Negative reference count!", "li::ReferencedClass", MB_ICONERROR );
-                    *( char* ) 0 = 0;
-                }
-#endif
-
-                if ( --referenceCount == 0 )
-                    delete this;
+                referenceCount++;
             }
+
+            virtual void release() = 0;
     };
 
     template <class T> void destroy( T*& c )
@@ -267,7 +279,7 @@ namespace li
         }
     }
 
-    template <class T = ReferencedClass, class RT = ReferencedClass, void (RT::*method)() = &RT::release> class Reference
+    template <class T = RefCountedClass, class RT = RefCountedClass, void (RT::*method)() = &RT::release> class Reference
     {
         protected:
             T* instance;

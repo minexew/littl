@@ -64,14 +64,7 @@ namespace li
         }
     };
 
-    template <typename T> class IListable
-    {
-        public:
-            virtual void listBegin() = 0;
-            virtual T listNext() = 0;
-    };
-
-    class ISeekable
+    class Seekable
     {
         public:
             virtual uint64_t getPos() = 0;
@@ -89,11 +82,11 @@ namespace li
             }
     };
 
-    class InputStream: virtual public ReferencedClass
+    class InputStream: virtual public RefCountedClass
     {
-        public:
-            li_ReferencedClass_override( InputStream )
+        li_refcounted_class( InputStream )
 
+        public:
             virtual bool isReadable() = 0;
             virtual size_t rawRead( void* out, size_t length ) = 0;
 
@@ -191,11 +184,11 @@ namespace li
             }
     };
 
-    class SeekableInputStream: virtual public InputStream, virtual public ISeekable
+    class SeekableInputStream: virtual public InputStream, virtual public Seekable
     {
-        public:
-            li_ReferencedClass_override( SeekableInputStream )
+        li_refcounted_class( SeekableInputStream )
 
+        public:
             String readLine()
             {
                 if ( !isReadable() )
@@ -256,11 +249,11 @@ namespace li
             }
     };
 
-    class OutputStream: virtual public ReferencedClass
+    class OutputStream: virtual public RefCountedClass
     {
-        public:
-            li_ReferencedClass_override( OutputStream )
+        li_refcounted_class( OutputStream )
 
+        public:
             virtual bool isWritable() = 0;
             //virtual size_t write( const void* input, size_t length ) = 0;
             virtual size_t rawWrite( const void* in, size_t length ) = 0;
@@ -346,26 +339,25 @@ namespace li
             }
     };
 
-    class SeekableOutputStream: virtual public OutputStream, virtual public ISeekable
+    class SeekableOutputStream: virtual public OutputStream, virtual public Seekable
     {
-        public:
-            li_ReferencedClass_override( SeekableOutputStream )
+        li_refcounted_class( SeekableOutputStream )
     };
 
     class IOStream: virtual public InputStream, virtual public OutputStream
     {
-        public:
-            li_ReferencedClass_override( IOStream )
+        li_refcounted_class( IOStream )
     };
 
     class SeekableIOStream: public IOStream, public SeekableInputStream, public SeekableOutputStream
     {
-        public:
-            li_ReferencedClass_override( SeekableIOStream )
+        li_refcounted_class( SeekableIOStream )
     };
 
     class ArrayIOStream: public Array<uint8_t>, public SeekableIOStream
     {
+        li_refcounted_class( ArrayIOStream )
+
         protected:
             size_t index, size;
 
@@ -374,10 +366,6 @@ namespace li
 
         public:
             ArrayIOStream() : index( 0 ), size( 0 )
-            {
-            }
-
-            virtual ~ArrayIOStream()
             {
             }
 

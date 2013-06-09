@@ -30,10 +30,14 @@
 
 namespace cfx2
 {
-    class List;
-    static List* newList( cfx2_List* list, bool owner );
+#if libcfx2_version >= 0x0090
+    inline void cfx2_release_node_2( cfx2_Node** node )
+    {
+        cfx2_release_node( node );
+    }
+#endif
 
-    class Node : public li::Iterable<Node, size_t>
+    class Node
     {
         public:
             cfx2_Node* node;
@@ -70,7 +74,11 @@ namespace cfx2
 
             Node clone()
             {
+#if libcfx2_version >= 0x0090
+                return cfx2_clone_node( node, cfx2_clone_recursive );
+#else
                 return cfx2_clone_node( node );
+#endif
             }
 
             Node createChild( const char* name, const char* text = nullptr, bool unique = false )
@@ -101,6 +109,7 @@ namespace cfx2
                 return (int) value;
             }
 
+#if libcfx2_version < 0x0090
             List* getChildren()
             {
                 if ( !node )
@@ -108,12 +117,14 @@ namespace cfx2
 
                 return newList( node->children, false );
             }
+#endif
 
             Iterator getIterator( bool reverse = false )
             {
                 return Iterator( *this, reverse ? getNumChildren() - 1 : 0 );
             }
 
+#if libcfx2_version < 0x0090
             List* getList( const char* command )
             {
                 if ( !node )
@@ -121,6 +132,7 @@ namespace cfx2
 
                 return newList( cfx2_get_list( node, command ), true );
             }
+#endif
 
             const char* getName()
             {
@@ -132,7 +144,7 @@ namespace cfx2
 
             size_t getNumChildren()
             {
-                return ( node != nullptr && node->children != nullptr ) ? node->children->length : 0;
+                return ( node != nullptr ) ? cfx2_list_length(node->children) : 0;
             }
 
             const char* getText()
@@ -153,10 +165,12 @@ namespace cfx2
                 return node == nullptr;
             }
 
+#if libcfx2_version < 0x0090
             void merge( cfx2::Node with )
             {
                 cfx2_merge_nodes_2( node, with.node, &node, cfx2_release_left | cfx2_release_right );
             }
+#endif
 
             bool query( const char* path, bool allowModifications = true )
             {
@@ -172,7 +186,7 @@ namespace cfx2
 
             void release()
             {
-                cfx2_release_node( node );
+                cfx2_release_node_2( &node );
             }
 
             void removeChild( Node child )
@@ -197,62 +211,7 @@ namespace cfx2
 
                 return cfx2_item( node->children, index, cfx2_Node* );
             }
-
-            virtual size_t iterableGetLength() const
-            {// TODO: node = null
-                return cfx2_list_length( node->children );
-            }
-
-            virtual Node iterableGetItem( size_t index )
-            {
-                return cfx2_item( node->children, index, cfx2_Node* );
-            }
     };
-
-    class List : public li::Iterable<Node, size_t>
-    {
-        cfx2_List* list;
-        bool owner;
-
-        public:
-            List( cfx2_List* list, bool owner ) : list( list ), owner( owner )
-            {
-            }
-
-            ~List()
-            {
-                if ( owner )
-                    cfx2_release_list( list );
-            }
-
-            Node get( size_t index )
-            {
-                return Node( cfx2_item( list, index, cfx2_Node* ) );
-            }
-
-            size_t getLength() const
-            {
-                if ( !list )
-                    return 0;
-
-                return list->length;
-            }
-
-            virtual size_t iterableGetLength() const
-            {
-                return getLength();
-            }
-
-            virtual Node iterableGetItem( size_t index )
-            {
-                return get( index );
-            }
-    };
-
-    static List* newList( cfx2_List* list, bool owner )
-    {
-        return new List( list, owner );
-    }
 
     class Document : public Node
     {
@@ -261,12 +220,20 @@ namespace cfx2
         public:
             Document()
             {
+#if libcfx2_version >= 0x0090
+                lastError = cfx2_create_node( &node );
+#else
                 lastError = cfx2_create_node( 0, &node );
+#endif
             }
 
             Document( const char* fileName )
             {
+#if libcfx2_version >= 0x0090
+                lastError = cfx2_read_file( &node, fileName, nullptr );
+#else
                 lastError = cfx2_read_file( fileName, &node );
+#endif
             }
 
             Document( cfx2_Node* node )
@@ -282,7 +249,15 @@ namespace cfx2
             void create( const char* name = nullptr )
             {
                 cfx2_release_node_2( &node );
+
+#if libcfx2_version >= 0x0090
+                lastError = cfx2_create_node( &node );
+
+                if ( lastError == cfx2_ok )
+                    lastError = cfx2_rename_node( node, name );
+#else
                 lastError = cfx2_create_node( name, &node );
+#endif
             }
 
             const char* getErrorDesc()
@@ -295,11 +270,15 @@ namespace cfx2
                 return node != nullptr && lastError == cfx2_ok;
             }
         
-            void loadFrom(li::SeekableInputStream* input)
+            void loadFrom( li::SeekableInputStream* input )
             {
                 cfx2_release_node_2( &node );
 
-                cfx2_read_from_string(input->readWhole(), &node);
+#if libcfx2_version >= 0x0090
+                cfx2_read_from_string( &node, input->readWhole(), nullptr );
+#else
+                cfx2_read_from_string( input->readWhole(), &node );
+#endif
             }
 
             bool save( const char* fileName )
@@ -312,11 +291,11 @@ namespace cfx2
                 char* text = nullptr;
                 size_t capacity = 0, used = 0;
 
-                cfx2_write_to_buffer(node, &text, &capacity, &used);
+                cfx2_write_to_buffer( node, &text, &capacity, &used );
 
-                stream->write(text, used);
+                stream->write( text, used );
 
-                free(text);
+                free( text );
 
                 return true;
             }

@@ -191,7 +191,7 @@ namespace li
                 destructPointer( data + i );
         else
             for ( TCapacity i = destField + length; i > destField && i > srcField + length; i-- )
-                destructPointer( data + i );
+                destructPointer( data + i - 1 );
 
         // Move the data
         memmove( data + destField, data + srcField, length * sizeof( T ) );

@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2011-2012 Xeatheran Minexew
+    Copyright (c) 2011-2013 Xeatheran Minexew
 
     This software is provided 'as-is', without any express or implied
     warranty. In no event will the authors be held liable for any damages
@@ -39,6 +39,27 @@ namespace li
                     this->path = path.dropRightPart( 1 );
                 else
                     this->path = path;
+            }
+
+            static String getAbsolutePath( const char* path )
+            {
+#ifdef li_MSW
+                // FIXME: Use Unicode
+                char fullPath[4096];
+
+                return _fullpath( fullPath, path, lengthof( fullPath ) );
+#else
+                const char* realPath = realpath( path, nullptr );
+                String absolutePath( realPath );
+
+                free( realPath );
+                return absolutePath;
+#endif
+            }
+
+            String getAbsolutePath()
+            {
+                return getAbsolutePath( path );
             }
 
             static String format( const char* fileName )

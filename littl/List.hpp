@@ -27,41 +27,16 @@
 
 #include <littl/Array.hpp>
 
-#define each_in_list( list_, iter_ ) ( size_t iter_ = 0; iter_ < ( list_ ).getLength(); iter_++ )
-#define each_in_list_ptr( list_, iter_ ) ( size_t iter_ = 0; ( list_ ) && iter_ < ( list_ )->getLength(); iter_++ )
-#define reverse_each( list_, iter_ ) ( intptr_t iter_ = ( list_ ).getLength() - 1; iter_ >= 0; iter_-- )
-
-#define iterate( list_ ) for ( ( list_ ).begin(); ( list_ ).iter() < ( int )( list_ ).iterableGetLength(); ( list_ ).next() )
-#define reverse_iterate( list_ ) for ( ( list_ ).end(); ( list_ ).iter() >= 0; ( list_ ).prev() )
-
-#define li_List_getLength_safe( list_ ) ( ( list_ ) ? ( list_ )->getLength() : 0 )
-
 #define iterate2( iter_, list_ ) for ( auto iter_ = ( list_ ).getIterator(); iter_.isValid(); ++iter_ )
 #define reverse_iterate2( iter_, list_ ) for ( auto iter_ = ( list_ ).getIterator( true ); iter_.isValid(); --iter_ )
 
 namespace li
 {
-    template <typename T, typename TLength> class Iterable
-    {
-        intptr_t iterator;
-
-        public:
-            virtual TLength iterableGetLength() const = 0;
-            virtual T iterableGetItem( TLength index ) = 0;
-
-            void begin() { iterator = 0; }
-    	    void end() { iterator = iterableGetLength() - 1; }
-    	    void prev() { --iterator; }
-    	    void next() { ++iterator; }
-    	    intptr_t iter() const { return iterator; }
-    	    T current() { return iterableGetItem( iterator ); }
-    };
-
 #define li_base Array<T, TLength, IAllocator, options>
 #define li_this List<T, TLength, IAllocator, options>
 
     template<typename T, typename TLength = size_t, class IAllocator = Allocator<T>, int options = 0>
-    class List : public li_base, public Iterable<T&, TLength>
+    class List : public li_base
     {
         protected:
         public:
@@ -241,16 +216,6 @@ namespace li
             bool isEmpty() const
             {
                 return length == 0;
-            }
-
-            virtual TLength iterableGetLength() const
-            {
-                return getLength();
-            }
-
-            virtual T& iterableGetItem( TLength index )
-            {
-                return li_base::get( index );
             }
 
             void load( const T* source, TLength count, TLength offset = 0 )

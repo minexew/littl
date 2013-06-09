@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2011 Xeatheran Minexew
+    Copyright (c) 2011, 2013 Xeatheran Minexew
 
     This software is provided 'as-is', without any express or implied
     warranty. In no event will the authors be held liable for any damages
@@ -32,6 +32,7 @@
 #else
 #include <dirent.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #endif
 
 namespace li
@@ -140,6 +141,23 @@ namespace li
                     Entry entry = { ent->d_name, false /*isDirectory*/, 0 /* size */};
                     entries.add(entry);
                 }
+#endif
+            }
+
+            static String getCurrent()
+            {
+#ifdef li_MSW
+                // FIXME: Use Unicode
+                char currDir[4096];
+
+                currDir[0] = 0;
+                GetCurrentDirectoryA(lengthof(currDir), currDir);
+
+                return String(currDir);
+#else
+                char currDir[4096];
+
+                return String(getcwd(currDir, lengthof(currDir)));
 #endif
             }
 
