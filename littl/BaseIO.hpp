@@ -84,7 +84,7 @@ namespace li
 
     class InputStream: virtual public RefCountedClass
     {
-        li_refcounted_class( InputStream )
+        li_refcounted_class_partial( InputStream )
 
         public:
             virtual bool isReadable() = 0;
@@ -186,7 +186,7 @@ namespace li
 
     class SeekableInputStream: virtual public InputStream, virtual public Seekable
     {
-        li_refcounted_class( SeekableInputStream )
+        li_refcounted_class_partial( SeekableInputStream )
 
         public:
             String readLine()
@@ -251,7 +251,7 @@ namespace li
 
     class OutputStream: virtual public RefCountedClass
     {
-        li_refcounted_class( OutputStream )
+        li_refcounted_class_partial( OutputStream )
 
         public:
             virtual bool isWritable() = 0;
@@ -341,17 +341,17 @@ namespace li
 
     class SeekableOutputStream: virtual public OutputStream, virtual public Seekable
     {
-        li_refcounted_class( SeekableOutputStream )
+        li_refcounted_class_partial( SeekableOutputStream )
     };
 
     class IOStream: virtual public InputStream, virtual public OutputStream
     {
-        li_refcounted_class( IOStream )
+        li_refcounted_class_partial( IOStream )
     };
 
     class SeekableIOStream: public IOStream, public SeekableInputStream, public SeekableOutputStream
     {
-        li_refcounted_class( SeekableIOStream )
+        li_refcounted_class_partial( SeekableIOStream )
     };
 
     class ArrayIOStream: public Array<uint8_t>, public SeekableIOStream
@@ -531,6 +531,8 @@ namespace li
 
     class SeekableInputStreamSegment : public SeekableInputStream
     {
+        li_refcounted_class( SeekableInputStreamSegment )
+
         Reference<SeekableInputStream> stream;
         uint64_t pos, segmentOffset, segmentLength;
 
