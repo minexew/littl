@@ -77,7 +77,7 @@ namespace li
                 append( c );
             }
 
-            StringTpl( Unicode::Character c ) : default_init_seq
+            StringTpl( UnicodeChar c ) : default_init_seq
             {
                 append( c );
             }
@@ -128,14 +128,14 @@ namespace li
             }
 
             void append( char c );
-            void append( Utf8Char c );
-            void append( const Utf8Character& c );
+            void append( Unicode::Char c );
+            void append( const UnicodeChar& c );
             void append( const char* stringUtf8 );
             void append( const char* stringUtf8, size_t numBytes );
             void append( const StringTpl& other );
-            bool beginsWith( Utf8Char c ) const;
+            bool beginsWith( Unicode::Char c ) const;
             bool beginsWith( const StringTpl& other ) const;
-            Utf8Char charAt( size_t offset ) const;
+            Unicode::Char charAt( size_t offset ) const;
 
             void clear()
             {
@@ -175,7 +175,7 @@ namespace li
             StringTpl<blockSize> dropLeft( size_t length ) const { return dropLeftPart( length ); }
             StringTpl<blockSize> dropRightPart( size_t length ) const;
             StringTpl<blockSize> dropRight( size_t length ) const { return dropRightPart( length ); }
-            bool endsWith( Unicode::Character c );
+            bool endsWith( UnicodeChar c );
             bool endsWith( const StringTpl& other ) const;
 
             bool equals( const char* other, bool caseSensitive = true ) const
@@ -188,16 +188,16 @@ namespace li
                 return compare( str, other, caseSensitive ) == 0;
             }
 
-            intptr_t findChar( Utf8Char c, size_t beginAt = 0 ) const;
-            intptr_t findDifferentChar( Utf8Char c, size_t beginAt = 0 ) const;
-            intptr_t findLastChar( Utf8Char c, size_t beginAt = 0 ) const;
+            intptr_t findChar( Unicode::Char c, size_t beginAt = 0 ) const;
+            intptr_t findDifferentChar( Unicode::Char c, size_t beginAt = 0 ) const;
+            intptr_t findLastChar( Unicode::Char c, size_t beginAt = 0 ) const;
             intptr_t findLastSubString( const StringTpl& pattern, size_t beginAt = 0 );
             intptr_t findSubString( const StringTpl& pattern, size_t beginAt = 0 ) const;
             static StringTpl<blockSize> formatBool( bool value, bool useText = false );
             static StringTpl<blockSize> formatFloat( float value, int width = -1 );
             static StringTpl<blockSize> formatInt( int value, int width = -1, Base base = decimal );
             char* getBuffer() { return data; }
-            Utf8Char getChar( size_t& index ) const;
+            Unicode::Char getChar( size_t& index ) const;
             StringTpl<blockSize> getFiltered( int (* filter)( int c ) ) const;
 
             static uint32_t getHash( const char* string );
@@ -240,7 +240,7 @@ namespace li
 
             StringTpl<blockSize> leftPart( size_t length ) const;
             StringTpl<blockSize> left( size_t length ) const { return leftPart( length ); }
-            unsigned parse( List<StringTpl>& tokens, Utf8Char separator, Utf8Char escape = Utf8::invalidChar, bool strict = false ) const;
+            unsigned parse( List<StringTpl>& tokens, Unicode::Char separator, Unicode::Char escape = Unicode::invalidChar, bool strict = false ) const;
             StringTpl<blockSize> replaceAll( const StringTpl& pattern, const StringTpl& replaceWith ) const;
             StringTpl<blockSize> rightPart( size_t length ) const;
             StringTpl<blockSize> right( size_t length ) const { return rightPart( length ); };
@@ -396,7 +396,7 @@ namespace li
 
             operator_append( char )
             operator_append( char* )
-            operator_append( const Utf8Character& )
+            operator_append( const UnicodeChar& )
             operator_append( const char* )
             operator_append( const StringTpl& )
 
@@ -441,7 +441,7 @@ namespace li
         numBytes++;
     }
 
-    __li_member( void ) append( Utf8Char c )
+    __li_member( void ) append( Unicode::Char c )
     {
         if ( c == 0 )
             return;
@@ -461,7 +461,7 @@ namespace li
         }
     }
 
-    __li_member( void ) append( const Utf8Character& c )
+    __li_member( void ) append( const UnicodeChar& c )
     {
         append( c.c );
     }
@@ -510,7 +510,7 @@ namespace li
         numBytes += other.numBytes;
     }
 
-    __li_member( bool ) beginsWith( Utf8Char c ) const
+    __li_member( bool ) beginsWith( Unicode::Char c ) const
     {
         size_t index = 0;
 
@@ -524,10 +524,10 @@ namespace li
 
         while ( index < getNumCharsCached( cache ) )
         {
-            Utf8Char thisChar = getChar( index ),
+            const Unicode::Char thisChar = getChar( index ),
                     otherChar = other.getChar( otherIndex );
 
-            if ( otherChar == Utf8::invalidChar )
+            if ( otherChar == Unicode::invalidChar )
                 return true;
             else if ( thisChar != otherChar )
                 return false;
@@ -536,13 +536,13 @@ namespace li
         return false;
     }
 
-    __li_member( Utf8Char ) charAt( size_t offset ) const
+    __li_member( Unicode::Char ) charAt( size_t offset ) const
     {
         size_t index = 0;
 
         for ( size_t i = 0; i < offset; i++ )
-            if ( getChar( index ) == Utf8::invalidChar )
-                return Utf8::invalidChar;
+            if ( getChar( index ) == Unicode::invalidChar )
+                return Unicode::invalidChar;
 
         return getChar( index );
     }
@@ -571,17 +571,17 @@ namespace li
             return leftPart( getNumCharsCached( cache ) - length );
     }
 
-    __li_member( bool ) endsWith( Unicode::Character c )
+    __li_member( bool ) endsWith( UnicodeChar c )
     {
         intptr_t cache = -1;
         size_t index = 0;
 
         if ( getNumCharsCached( cache ) < 1 )
-            return ( c == Utf8::invalidChar );
+            return ( c == Unicode::invalidChar );
 
         for ( size_t i = 0; i < getNumCharsCached( cache ) - 1; i++ )
-            if ( getChar( index ) == Utf8::invalidChar )
-                return ( c == Utf8::invalidChar );
+            if ( getChar( index ) == Unicode::invalidChar )
+                return ( c == Unicode::invalidChar );
 
         return getChar( index ) == c;
     }
@@ -599,7 +599,7 @@ namespace li
             return false;
 
         for ( i = 0; i < cache - otherLength; i++ )
-            if ( getChar( index ) == Utf8::invalidChar )
+            if ( getChar( index ) == Unicode::invalidChar )
                 return false;
 
         for ( ; i < cache; i++ )
@@ -609,12 +609,12 @@ namespace li
         return true;
     }
 
-    __li_member( intptr_t ) findChar( Utf8Char c, size_t beginAt ) const
+    __li_member( intptr_t ) findChar( Unicode::Char c, size_t beginAt ) const
     {
         size_t index = 0;
 
         for ( size_t i = 0; i < beginAt; i++ )
-            if ( getChar( index ) == Utf8::invalidChar )
+            if ( getChar( index ) == Unicode::invalidChar )
                 return -1;
 
         for ( size_t charIndex = beginAt; index < getNumBytes(); charIndex++ )
@@ -624,12 +624,12 @@ namespace li
         return -1;
     }
 
-    __li_member( intptr_t ) findDifferentChar( Utf8Char c, size_t beginAt ) const
+    __li_member( intptr_t ) findDifferentChar( Unicode::Char c, size_t beginAt ) const
     {
         size_t index = 0;
 
         for ( size_t i = 0; i < beginAt; i++ )
-            if ( getChar( index ) == Utf8::invalidChar )
+            if ( getChar( index ) == Unicode::invalidChar )
                 return -1;
 
         for ( size_t charIndex = beginAt; index < getNumBytes(); charIndex++ )
@@ -639,7 +639,7 @@ namespace li
         return -1;
     }
 
-    __li_member( intptr_t ) findLastChar( Utf8Char c, size_t beginAt ) const
+    __li_member( intptr_t ) findLastChar( Unicode::Char c, size_t beginAt ) const
     {
         intptr_t lastFound = -1, cache = -1;
         size_t index = beginAt;
@@ -686,14 +686,14 @@ namespace li
         size_t index = 0;
 
         for ( size_t i = 0; i < beginAt; i++ )
-            if ( getChar( index ) == Utf8::invalidChar )
+            if ( getChar( index ) == Unicode::invalidChar )
                 return -1;
 
         for ( size_t charIndex = beginAt; index < getNumBytes(); charIndex++ )
         {
             size_t otherSubIndex = 0;
 
-            Utf8Char thisChar = getChar( index ),
+            const Unicode::Char thisChar = getChar( index ),
                     otherChar = pattern.getChar( otherSubIndex );
 
             if ( thisChar == otherChar )
@@ -702,10 +702,10 @@ namespace li
 
                 while ( subIndex <= getNumBytes() )
                 {
-                    Utf8Char thisSubChar = getChar( subIndex ),
+                    const Unicode::Char thisSubChar = getChar( subIndex ),
                             otherSubChar = pattern.getChar( otherSubIndex );
 
-                    if ( otherSubChar == Utf8::invalidChar )
+                    if ( otherSubChar == Unicode::invalidChar )
                         return charIndex;
                     else if ( thisSubChar != otherSubChar )
                         break;
@@ -746,12 +746,12 @@ namespace li
         return numBuffer.c_str();
     }
 
-    __li_member( Utf8Char ) getChar( size_t& index ) const
+    __li_member( Unicode::Char ) getChar( size_t& index ) const
     {
-        Utf8Char result;
+        Unicode::Char result;
 
         if ( index >= getNumBytes() )
-            return Utf8::invalidChar;
+            return Unicode::invalidChar;
 
         unsigned length = Utf8::decode( result, data + index, getNumBytes() - index );
 
@@ -761,7 +761,7 @@ namespace li
             return result;
         }
         else
-            return Utf8::invalidChar;
+            return Unicode::invalidChar;
     }
 
     __li_member( uint32_t ) getHash( const char* string )
@@ -788,18 +788,18 @@ namespace li
 
         for ( size_t i = 0; i < length; i++ )
         {
-            Utf8Char next = getChar( index );
+            Unicode::Char next = getChar( index );
 
-            if ( next == Utf8::invalidChar )
+            if ( next == Unicode::invalidChar )
                 return result;
             else
-                result.append( Utf8Character( next ) );
+                result.append( UnicodeChar( next ) );
         }
 
         return result;
     }
 
-    __li_member( unsigned ) parse( List<StringTpl>& tokens, Utf8Char separator, Utf8Char escape, bool strict ) const
+    __li_member( unsigned ) parse( List<StringTpl>& tokens, Unicode::Char separator, Unicode::Char escape, bool strict ) const
     {
         StringTpl buffer;
         size_t index = 0;
@@ -808,9 +808,9 @@ namespace li
 
         while ( index < getNumBytes() )
         {
-            Utf8Char next = getChar( index );
+            const Unicode::Char next = getChar( index );
 
-            if ( next == Utf8::invalidChar )
+            if ( next == Unicode::invalidChar )
                 break;
             else if ( next == escape && !escaped )
                 escaped = true;
@@ -825,7 +825,7 @@ namespace li
             }
             else
             {
-                buffer.append( Utf8Character( next ) );
+                buffer.append( UnicodeChar( next ) );
                 escaped = false;
             }
         }
@@ -872,19 +872,19 @@ namespace li
         size_t index = 0;
 
         for ( size_t i = 0; i < getNumCharsCached( cache ) - length; i++ )
-            if ( getChar( index ) == Utf8::invalidChar )
+            if ( getChar( index ) == Unicode::invalidChar )
                 return StringTpl();
 
         StringTpl result;
 
         for ( size_t i = 0; i < length; i++ )
         {
-            Utf8Char next = getChar( index );
+            const Unicode::Char next = getChar( index );
 
-            if ( next == Utf8::invalidChar )
+            if ( next == Unicode::invalidChar )
                 return result;
             else
-                result.append( Utf8Character( next ) );
+                result.append( UnicodeChar( next ) );
         }
 
         return result;
@@ -1012,19 +1012,19 @@ namespace li
         size_t index = 0;
 
         for ( size_t i = 0; i < begin; i++ )
-            if ( getChar( index ) == Utf8::invalidChar )
+            if ( getChar( index ) == Unicode::invalidChar )
                 return StringTpl();
 
         StringTpl result;
 
         for ( size_t i = 0; i < length; i++ )
         {
-            Utf8Char next = getChar( index );
+            const Unicode::Char next = getChar( index );
 
-            if ( next == Utf8::invalidChar )
+            if ( next == Unicode::invalidChar )
                 return result;
             else
-                result.append( Utf8Character( next ) );
+                result.append( UnicodeChar( next ) );
         }
 
         return result;
@@ -1039,7 +1039,7 @@ namespace li
 
         for ( ; index < getNumBytes(); chars++ )
         {
-            Utf8Char c = getChar( index );
+            const Unicode::Char c = getChar( index );
             output[chars] = ( c < 0x80 ) ? c : '?';
         }
 
@@ -1055,12 +1055,12 @@ namespace li
 
         while ( true )
         {
-            Utf8Char next = getChar( index );
+            const Unicode::Char next = getChar( index );
 
-            if ( next == Utf8::invalidChar )
+            if ( next == Unicode::invalidChar )
                 return result;
             else
-                result.append( Utf8Character( filter( next ) ) );
+                result.append( UnicodeChar( filter( next ) ) );
         }
 
         return result;
@@ -1103,7 +1103,7 @@ namespace li
     {
         const String& string;
         unsigned index;
-        Utf8Char next;
+        Unicode::Char next;
 
         void readNext()
         {
@@ -1115,7 +1115,7 @@ namespace li
 
             unsigned got = Utf8::decode( next, string.c_str() + index, string.getNumBytes() - index );
 
-            if ( !got || next == Utf8::invalidChar )
+            if ( !got || next == Unicode::invalidChar )
                 next = 0;
 
             index += got;
@@ -1124,12 +1124,12 @@ namespace li
         StringIter& operator = (const StringIter&);
 
         public:
-            StringIter( const String& string ) : string( string ), index( 0 ), next( Utf8::invalidChar )
+            StringIter( const String& string ) : string( string ), index( 0 ), next( Unicode::invalidChar )
             {
                 readNext();
             }
 
-            operator Utf8Char () const
+            operator Unicode::Char () const
             {
                 return next;
             }

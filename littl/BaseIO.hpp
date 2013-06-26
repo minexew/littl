@@ -175,7 +175,7 @@ namespace li
             String readString()
             {
                 String value;
-                Unicode::Character c;
+                UnicodeChar c;
 
                 while ( readCharUtf8( c ) && c != 0 && c != Unicode::invalidChar )
                     value += c;

@@ -32,6 +32,8 @@
 #include <sys/stat.h>
 #endif
 
+// FIXME: fopen on Windows is NOT UTF-8!
+
 namespace li
 {
     struct FileStat

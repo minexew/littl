@@ -38,7 +38,7 @@ namespace li
             if ( ( c >= '0' && c <= '9' ) || ( c >= 'a' && c < 'z' ) || ( c >= 'A' && c <= 'Z' )
                     || c == '$' || c == '-' || c == '_' || c == '.' || c == '+' || c == '!' || c == '*' || c == '\'' || c == '(' || c == ')'
                     || c == '&' || c == ',' || c == '/' || c == ':' || c == ';' || c == '=' || c == '?' || c == '@' )
-                escaped += Utf8Character( c );
+                escaped += UnicodeChar( c );
             else
             {
                 char encoded[4];

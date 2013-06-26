@@ -86,7 +86,7 @@ namespace li
             if ( next == 0 || next == '\n' )
                 break;
             else if ( next != '\r' )
-                line += Utf8Character( next );
+                line += UnicodeChar( next );
         }
 
         return true;
