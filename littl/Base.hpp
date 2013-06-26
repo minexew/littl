@@ -149,8 +149,8 @@ using std::ptrdiff_t;
         ClassName* reference() { ++this->referenceCount; return this; }\
     private:
 
-// Doesn't work in VS2010 nor GCC 4.6, but should in the future
-//#define li_ReferencedClass_override2 auto reference() -> decltype(this) { li::ReferencedClass::reference(); return this; }
+#define li_stringify(x)     #x
+#define li_stringify2(x)    li_stringify(x)
 
 #define li_tryCall(object_, method_) { if ((object_) != nullptr) (object_)->method_; }
 
