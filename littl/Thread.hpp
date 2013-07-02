@@ -585,7 +585,7 @@ namespace li
     inline int32_t interlockedDecrement(volatile int32_t* a_ptr)
     {
 #ifdef li_MSW
-        return InterlockedDecrement((unsigned*) a_ptr);
+        return InterlockedDecrement((volatile LONG*) a_ptr);
 #elif defined(li_Apple)
         return OSAtomicDecrement32(a_ptr);
 #else
@@ -596,7 +596,7 @@ namespace li
     inline int32_t interlockedIncrement(volatile int32_t* a_ptr)
     {
 #ifdef li_MSW
-        return InterlockedIncrement((unsigned*) a_ptr);
+        return InterlockedIncrement((volatile LONG*) a_ptr);
 #elif defined(li_Apple)
         return OSAtomicIncrement32(a_ptr);
 #else
