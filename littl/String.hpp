@@ -31,6 +31,7 @@
 
 #if !defined( __GNUC__ )
 #define strtof( a_, b_ ) ( ( float ) strtod( a_, b_ ) )
+#define PRIi64 "I64i"
 #define PRIuPTR "Iu"
 #define PRIu64 "I64u"
 #endif

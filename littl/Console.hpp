@@ -29,8 +29,10 @@ namespace li
 {
     class Console: public IOStream
     {
+        li_refcounted_class( Console )
+
         public:
-            virtual ~Console()
+            ~Console()
             {
             }
 

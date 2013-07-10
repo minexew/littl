@@ -21,7 +21,6 @@
 
 //* depends on: String
 #include "BaseIO.hpp"
-#include "IOStreamBuffer.hpp"
 #include "StreamBuffer.hpp"
 
 //* depends on: BaseIO

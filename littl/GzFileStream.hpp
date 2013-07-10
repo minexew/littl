@@ -8,6 +8,8 @@ namespace li
 {
     class GzFileStream: public IOStream
     {
+        li_refcounted_class( GzFileStream )
+
         private:
             gzFile file;
 
@@ -23,8 +25,6 @@ namespace li
             }
 
     	public:
-            li_ReferencedClass_override( GzFileStream )
-
             static GzFileStream* open( const char* fileName, const char* mode = "rb" )
             {
                 gzFile file = gzopen( fileName, mode );
