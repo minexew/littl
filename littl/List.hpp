@@ -173,6 +173,11 @@ namespace li
                 return this->get( length - field - 1 );
             }
 
+            T* getPtrFromEnd2( TLength field )
+            {
+                return this->getPtr( length - field );
+            }
+
             Iterator getIterator( bool reverse = false )
             {
                 return Iterator( *this, reverse ? length - 1 : 0 );
@@ -245,6 +250,17 @@ namespace li
             {
                 if ( field + count <= length )
                     remove( length - field - count, count );
+            }
+
+            void removeFromEnd2( TLength field, TLength count = 1 )
+            {
+                if ( field > length )
+                    return;
+
+                if ( field > count )
+                    count = field;
+
+                remove( length - field, count );
             }
 
             bool removeItem( const T& item )
