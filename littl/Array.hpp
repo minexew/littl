@@ -85,10 +85,15 @@ namespace li
 
     li_member_ Array( TCapacity initialCapacity ) : data( 0 ), capacity( initialCapacity )
     {
-        data = ( T* )IAllocator::allocate( capacity );
+        if ( initialCapacity > 0 )
+        {
+            data = ( T* )IAllocator::allocate( capacity );
 
-        for ( unsigned i = 0; i < capacity; i++ )
-            constructPointer( data + i );
+            for ( unsigned i = 0; i < capacity; i++ )
+                constructPointer( data + i );
+        }
+        else
+            data = nullptr;
     }
 
     li_member_ Array( li_this&& other ) : data( other.data ), capacity( other.capacity )
@@ -133,6 +138,7 @@ namespace li
         T* ptr = data;
 
         data = nullptr;
+        capacity = 0;
 
         return ptr;
     }

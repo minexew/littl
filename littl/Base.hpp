@@ -152,7 +152,7 @@ using std::ptrdiff_t;
 #define li_stringify(x)     #x
 #define li_stringify2(x)    li_stringify(x)
 
-#define li_tryCall(object_, method_) { if ((object_) != nullptr) (object_)->method_; }
+#define li_tryCall(object_, method_) do { if ((object_) != nullptr) (object_)->method_; } while (false)
 
 #define li_Reference2(T, method) Reference<T, DereferencePointerType<decltype(ExtractClassPointerTypeFromMethodPointer(method))>::Type, method>
 

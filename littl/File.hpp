@@ -38,7 +38,7 @@ namespace li
 {
     struct FileStat
     {
-        enum { is_file, is_directory };
+        enum { is_file = 1, is_directory = 2 };
 
         int flags;
         uint64_t sizeInBytes;

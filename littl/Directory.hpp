@@ -35,6 +35,8 @@
 #include <unistd.h>
 #endif
 
+// FIXME: Unicode on Windows!
+
 namespace li
 {
     class Directory

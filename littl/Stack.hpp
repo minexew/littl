@@ -24,6 +24,12 @@ namespace li
                 height = 0;
             }
 
+            void deleteAllItems()
+            {
+                while ( !isEmpty() )
+                    delete pop();
+            }
+
             const THeight getHeight() const
             {
                 return height;

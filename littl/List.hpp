@@ -88,14 +88,15 @@ namespace li
             };
 
         public:
-            List( TLength initial = 5 )
-                : li_base( initial ), length( 0 )
+            List( TLength initialCapacity = 0 )
+                : li_base( initialCapacity ), length( 0 )
             {
             }
 
             List( li_this&& other )
                 : li_base( ( li_base&& ) other ), length( other.length )
             {
+                other.length = 0;
             }
 
             List( const List<T>& other )
@@ -142,6 +143,15 @@ namespace li
                     delete this->getUnsafe( i );
 
                 setLength( 0, false );
+            }
+
+            T* detachData()
+            {
+                T* ptr = li_base::detachData();
+
+                length = 0;
+
+                return ptr;
             }
 
             template <typename T2>
