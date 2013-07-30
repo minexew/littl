@@ -29,7 +29,7 @@ namespace li
     class Unicode
     {
         public:
-            typedef unsigned Char;
+            typedef char32_t Char;
 
             static const Char backspaceChar =   0x00000008;
             static const Char tabChar =         0x00000009;
