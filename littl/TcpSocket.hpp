@@ -29,8 +29,6 @@ namespace li
 {
     class TcpSocket : public IOStream
     {
-        li_refcounted_class_partial( TcpSocket )
-
         public:
             enum State
             {
@@ -38,6 +36,7 @@ namespace li
             };
 
             static TcpSocket* create( bool blocking = false );
+            virtual ~TcpSocket() {}
 
             virtual const char* getErrorDesc() = 0;
             virtual const char* getPeerIP() = 0;
@@ -65,5 +64,7 @@ namespace li
 
             // Direct access
             virtual size_t readUnbuffered( void* buffer, size_t maxlen ) = 0;
+
+            li_ReferencedClass_override( TcpSocket )
     };
 }

@@ -138,16 +138,7 @@ using std::ptrdiff_t;
 #include <new>
 #endif
 
-#define li_refcounted_class( ClassName )\
-    public:\
-        ClassName* reference() { ++this->referenceCount; return this; }\
-        virtual void release() override { if (--this->referenceCount == 0) delete this; }\
-    private:
-
-#define li_refcounted_class_partial( ClassName )\
-    public:\
-        ClassName* reference() { ++this->referenceCount; return this; }\
-    private:
+#define li_ReferencedClass_override( ClassName ) ClassName* reference() { li::ReferencedClass::reference(); return this; }
 
 #define li_stringify(x)     #x
 #define li_stringify2(x)    li_stringify(x)
@@ -229,13 +220,24 @@ namespace li
 
     template <class ClassName> auto ExtractClassPointerTypeFromMethodPointer(void (ClassName::*)()) -> ClassName*;
     
-    class RefCountedClass
+    class ReferencedClass
     {
-        protected:
-            int32_t referenceCount;
+        size_t referenceCount;
 
-            RefCountedClass() : referenceCount( 1 )
+        protected:
+            ReferencedClass() : referenceCount( 1 )
             {
+                //puts( "++ REFC" );
+            }
+
+            virtual ~ReferencedClass()
+            {
+                //puts( "-- REFC" );
+            }
+
+            void reference()
+            {
+                referenceCount++;
             }
 
         public:
@@ -244,12 +246,21 @@ namespace li
                 return referenceCount > 1;
             }
 
-            void reference()
+            void release()
             {
-                referenceCount++;
-            }
+                //printf( "~ReferencedClass<%s> %" PRIuPTR " -> %" PRIuPTR "\n", typeid( *this ).name(), referenceCount, referenceCount - 1 );
 
-            virtual void release() = 0;
+#ifdef li_MSW
+                if ( referenceCount <= 0 )
+                {
+                    MessageBoxA( 0, "Negative reference count!", "li::ReferencedClass", MB_ICONERROR );
+                    *( char* ) 0 = 0;
+                }
+#endif
+
+                if ( --referenceCount == 0 )
+                    delete this;
+            }
     };
 
     template <class T> void destroy( T*& c )
@@ -279,7 +290,7 @@ namespace li
         }
     }
 
-    template <class T = RefCountedClass, class RT = RefCountedClass, void (RT::*method)() = &RT::release> class Reference
+    template <class T = ReferencedClass, class RT = ReferencedClass, void (RT::*method)() = &RT::release> class Reference
     {
         protected:
             T* instance;

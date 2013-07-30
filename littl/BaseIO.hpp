@@ -82,11 +82,11 @@ namespace li
             }
     };
 
-    class InputStream: virtual public RefCountedClass
+    class InputStream: virtual public ReferencedClass
     {
-        li_refcounted_class_partial( InputStream )
-
         public:
+            li_ReferencedClass_override( InputStream )
+
             virtual bool isReadable() = 0;
             virtual size_t rawRead( void* out, size_t length ) = 0;
 
@@ -186,9 +186,9 @@ namespace li
 
     class SeekableInputStream: virtual public InputStream, virtual public Seekable
     {
-        li_refcounted_class_partial( SeekableInputStream )
-
         public:
+            li_ReferencedClass_override( SeekableInputStream )
+
             String readLine()
             {
                 if ( !isReadable() )
@@ -249,11 +249,11 @@ namespace li
             }
     };
 
-    class OutputStream: virtual public RefCountedClass
+    class OutputStream: virtual public ReferencedClass
     {
-        li_refcounted_class_partial( OutputStream )
-
         public:
+            li_ReferencedClass_override( OutputStream )
+
             virtual bool isWritable() = 0;
             //virtual size_t write( const void* input, size_t length ) = 0;
             virtual size_t rawWrite( const void* in, size_t length ) = 0;
@@ -341,23 +341,24 @@ namespace li
 
     class SeekableOutputStream: virtual public OutputStream, virtual public Seekable
     {
-        li_refcounted_class_partial( SeekableOutputStream )
+        public:
+            li_ReferencedClass_override( SeekableOutputStream )
     };
 
     class IOStream: virtual public InputStream, virtual public OutputStream
     {
-        li_refcounted_class_partial( IOStream )
+        public:
+            li_ReferencedClass_override( IOStream )
     };
 
     class SeekableIOStream: public IOStream, public SeekableInputStream, public SeekableOutputStream
     {
-        li_refcounted_class_partial( SeekableIOStream )
+        public:
+            li_ReferencedClass_override( SeekableIOStream )
     };
 
     class ArrayIOStream: public Array<uint8_t>, public SeekableIOStream
     {
-        li_refcounted_class( ArrayIOStream )
-
         protected:
             size_t index, size;
 
@@ -366,6 +367,10 @@ namespace li
 
         public:
             ArrayIOStream() : index( 0 ), size( 0 )
+            {
+            }
+
+            virtual ~ArrayIOStream()
             {
             }
 
@@ -531,8 +536,6 @@ namespace li
 
     class SeekableInputStreamSegment : public SeekableInputStream
     {
-        li_refcounted_class( SeekableInputStreamSegment )
-
         Reference<SeekableInputStream> stream;
         uint64_t pos, segmentOffset, segmentLength;
 

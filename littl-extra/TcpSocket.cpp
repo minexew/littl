@@ -29,8 +29,6 @@ namespace li
 {
     class TcpSocketImpl : public TcpSocket
     {
-        li_refcounted_class( TcpSocketImpl )
-
         private:
             State state;
 
@@ -58,7 +56,7 @@ namespace li
         public:
             TcpSocketImpl();
             TcpSocketImpl(bool blocking);
-            ~TcpSocketImpl();
+            virtual ~TcpSocketImpl();
 
             virtual const char* getErrorDesc() override;
             virtual const char* getPeerIP() override;

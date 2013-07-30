@@ -29,8 +29,6 @@ namespace li
 {
     class UdpSocketImpl : public UdpSocket
     {
-        li_refcounted_class( UdpSocketImpl )
-
         private:
             SOCKET sock;
             sockaddr peer;
@@ -46,7 +44,7 @@ namespace li
 
         public:
             UdpSocketImpl();
-            ~UdpSocketImpl();
+            virtual ~UdpSocketImpl();
 
             virtual const char* getErrorDesc() override;
             virtual const char* getPeerIP() override;

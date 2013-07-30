@@ -58,8 +58,6 @@ namespace li
 
     class File: public SeekableIOStream
     {
-        li_refcounted_class( File )
-
         private:
             enum LastAccess { Access_none, Access_read, Access_write };
 
@@ -72,13 +70,15 @@ namespace li
                 handle = fopen( fileName, mode );
             }
 
-            ~File()
+            virtual ~File()
     		{
                 if ( handle )
                     fclose( handle );
             }
 
     	public:
+            li_ReferencedClass_override( File )
+
     		File( FILE* handle ) : handle( handle )
     		{
     		    lastAccess = Access_none;
