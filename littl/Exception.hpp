@@ -86,7 +86,9 @@ namespace li
 
             static void rethrow( const Saved& saved )
             {
+#ifndef littl_no_exceptions
                 throw Exception( saved.functionName, saved.name, saved.description );
+#endif
             }
 
             void save( Saved& saved )
@@ -96,9 +98,11 @@ namespace li
                 saved.description = description;
             }
     };
-    
+
     inline void throwException(const char* functionName, const char* name, const char* description)
     {
+#ifndef littl_no_exceptions
         throw Exception(functionName, name, description);
+#endif
     }
 }

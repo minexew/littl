@@ -84,17 +84,12 @@ namespace li
     		    lastAccess = Access_none;
             }
 
-            static File* open( const char* fileName, bool forWriting = false, bool required = false )
+            static File* open( const char* fileName, bool forWriting = false )
             {
                 FILE* handle = fopen( fileName, forWriting ? "wb" : "rb" );
 
                 if ( handle == nullptr )
-                {
-                    if ( required )
-                        throw Exception( "FileOpenError", "Failed to open " + FileName::format( fileName ) );
-
                     return nullptr;
-                }
 
                 return new File( handle );
             }
