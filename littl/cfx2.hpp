@@ -25,6 +25,7 @@
 
 #include <littl/BaseIO.hpp>
 #include <littl/List.hpp>
+#include <littl/String.hpp>
 
 #include <confix2.h>
 
@@ -298,6 +299,21 @@ namespace cfx2
                 free( text );
 
                 return true;
+            }
+
+            li::String toString()
+            {
+                char* text = nullptr;
+                size_t capacity = 0, used = 0;
+
+                cfx2_write_to_buffer( node, &text, &capacity, &used );
+
+                li::String ret;
+                ret.set( text, used );
+
+                free( text );
+
+                return ret;
             }
 
             Document& operator = ( Node other )

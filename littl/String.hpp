@@ -150,11 +150,11 @@ namespace li
 
             static int compare( const char* s1, const char* s2, bool caseSensitive = true )
             {
-                if ( !s1 )
-                    return s2 ? 1 : 0;
+                const int s1empty = ( s1 == nullptr || *s1 == 0 );
+                const int s2empty = ( s2 == nullptr || *s2 == 0 );
 
-                if ( !s2 )
-                    return -1;
+                if ( s1empty || s2empty )
+                    return s1empty - s2empty;
 
                 if ( caseSensitive )
                     return strcmp( s1, s2 );
@@ -768,6 +768,9 @@ namespace li
     __li_member( uint32_t ) getHash( const char* string )
     {
         uint32_t hash = 0xE424AA76;
+
+        if ( string == nullptr )
+            return hash;
 
         while ( *string )
         {
