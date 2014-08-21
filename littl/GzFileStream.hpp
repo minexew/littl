@@ -8,7 +8,7 @@ namespace li
 {
     class GzFileStream: public IOStream
     {
-        li_refcounted_class( GzFileStream )
+        li_ReferencedClass_override( GzFileStream )
 
         private:
             gzFile file;

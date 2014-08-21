@@ -29,7 +29,7 @@ namespace li
 {
     class Console: public IOStream
     {
-        li_refcounted_class( Console )
+        li_ReferencedClass_override( Console )
 
         public:
             ~Console()

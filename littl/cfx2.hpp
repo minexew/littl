@@ -73,6 +73,11 @@ namespace cfx2
                 cfx2_add_child( node, child.node );
             }
 
+            cfx2_Node* c_node()
+            {
+                return node;
+            }
+
             Node clone()
             {
 #if libcfx2_version >= 0x0090
@@ -230,11 +235,7 @@ namespace cfx2
 
             Document( const char* fileName )
             {
-#if libcfx2_version >= 0x0090
-                lastError = cfx2_read_file( &node, fileName, nullptr );
-#else
-                lastError = cfx2_read_file( fileName, &node );
-#endif
+                load( fileName );
             }
 
             Document( cfx2_Node* node )
@@ -270,15 +271,47 @@ namespace cfx2
             {
                 return node != nullptr && lastError == cfx2_ok;
             }
-        
-            void loadFrom( li::SeekableInputStream* input )
+
+            bool load( const char* fileName )
             {
                 cfx2_release_node_2( &node );
 
 #if libcfx2_version >= 0x0090
-                cfx2_read_from_string( &node, input->readWhole(), nullptr );
+                lastError = cfx2_read_file( &node, fileName, nullptr );
 #else
-                cfx2_read_from_string( input->readWhole(), &node );
+                lastError = cfx2_read_file( fileName, &node );
+#endif
+
+                return (lastError == cfx2_ok);
+            }
+
+            bool loadFrom( li::SeekableInputStream* input )
+            {
+                cfx2_release_node_2( &node );
+
+#if libcfx2_version >= 0x0090
+                lastError = cfx2_read_from_string( &node, input->readWhole(), nullptr );
+#else
+                lastError = cfx2_read_from_string( input->readWhole(), &node );
+#endif
+
+                return (lastError == cfx2_ok);
+            }
+
+            bool loadFromString( const char* doc )
+            {
+                cfx2_release_node_2( &node );
+
+                if ( doc == nullptr )
+                {
+                    node = cfx2_new_node( nullptr );
+                    return true;
+                }
+
+#if libcfx2_version >= 0x0090
+                return cfx2_read_from_string( &node, doc, nullptr ) == cfx2_ok;
+#else
+                return cfx2_read_from_string( doc, &node ) == cfx2_ok;
 #endif
             }
 

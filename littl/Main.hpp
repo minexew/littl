@@ -57,10 +57,12 @@
     for ( int i = 1; i < argc; i++ )\
         args.add( argv[i] );\
 \
+    bool result = false;\
+\
     try\
     {\
         li::Object<main_class_> mc = new main_class_();\
-        mc->appmain( argv[0], ( li::List<li::String>&& ) args );\
+        result = mc->appmain( argv[0], ( li::List<li::String>&& ) args );\
     }\
     catch ( li::Exception ex )\
     {\
@@ -68,9 +70,9 @@
     }\
 \
     printf( "\n" );\
-    return 0;\
+    return result ? 0 : -1;\
 }
-
+/*
 namespace li
 {
     inline String getArgumentInput( const List<String>& args )
@@ -91,3 +93,4 @@ namespace li
         return 0;
     }
 }
+*/
