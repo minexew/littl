@@ -250,13 +250,7 @@ namespace li
             {
                 //printf( "~ReferencedClass<%s> %" PRIuPTR " -> %" PRIuPTR "\n", typeid( *this ).name(), referenceCount, referenceCount - 1 );
 
-#ifdef li_MSW
-                if ( referenceCount <= 0 )
-                {
-                    MessageBoxA( 0, "Negative reference count!", "li::ReferencedClass", MB_ICONERROR );
-                    *( char* ) 0 = 0;
-                }
-#endif
+                //li_assert( referenceCount > 0 )
 
                 if ( --referenceCount == 0 )
                     delete this;
