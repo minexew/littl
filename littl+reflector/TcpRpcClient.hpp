@@ -39,6 +39,7 @@ namespace li {
 namespace tcp_rpc_client {
 std::unique_ptr<TcpSocket> socket_(TcpSocket::create());
 ArrayIOStreamWithSRW bufferIn, bufferOut;
+bool rpcReturnsValue;
 }
 
 bool tcpRpcConnect(const char* hostname, int port) {
@@ -49,10 +50,11 @@ bool tcpRpcConnect(const char* hostname, int port) {
 }
 
 namespace rpc {
-bool beginRPC(const char* functionName, IWriter*& writer_out, IReader*& reader_out) {
+bool beginRPC(const char* functionName, bool returnsValue, IWriter*& writer_out, IReader*& reader_out) {
     using namespace li::tcp_rpc_client;
 
 	assert(reflection::reflectSerialize(std::string(functionName), &bufferOut));
+    rpcReturnsValue = returnsValue;
 
 	writer_out = &bufferOut;
 	reader_out = &bufferIn;
@@ -64,7 +66,9 @@ bool invokeRPC() {
 	using namespace li::tcp_rpc_client;
 
 	assert(socket_->send(bufferOut));
-	assert(socket_->receive(bufferIn, li::Timeout()));
+
+    if (rpcReturnsValue)
+	   assert(socket_->receive(bufferIn, li::Timeout()));
 
     return true;
 }

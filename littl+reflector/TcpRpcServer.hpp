@@ -58,7 +58,9 @@ public:
 			if (!dispatch(functionName.c_str(), &bufferIn, &bufferOut))
 				break;
 
-			assert(socket->send(bufferOut));
+			// TODO: a more robust check would be nice
+			if (bufferOut.getPos() > 0)
+				assert(socket->send(bufferOut));
 
 			bufferIn.clear(true);
 			bufferOut.clear(true);
