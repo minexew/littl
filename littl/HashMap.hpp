@@ -88,6 +88,7 @@ namespace li
             static void releaseBuckets( Bucket* buckets, Size numBuckets );
 
             HashMap( const HashMap<Key, Value, Hash, getHash, Size>& other );
+            HashMap<Key, Value, Hash, getHash, Size>& operator =( const HashMap<Key, Value, Hash, getHash, Size>& other );
 
         public:
             HashMap( Size shiftAmount = 2 );
@@ -119,7 +120,7 @@ namespace li
             : buckets( other.buckets ), numBuckets( other.numBuckets ), numEntries( other.numEntries ), shiftAmount( other.shiftAmount )
     {
         other.buckets = nullptr;
-        other.numBuckets = nullptr;
+        other.numBuckets = 0;
         other.numEntries = 0;
         other.shiftAmount = 0;
     }
@@ -132,6 +133,8 @@ namespace li
     template<typename Key, typename Value, typename Hash, Hash ( *getHash )( const Key& ), typename Size>
     HashMap<Key, Value, Hash, getHash, Size>& li_this::operator =( HashMap<Key, Value, Hash, getHash, Size>&& other )
     {
+        clear();
+
         buckets = other.buckets;
         numBuckets = other.numBuckets;
         numEntries = other.numEntries;
