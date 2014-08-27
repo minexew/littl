@@ -198,7 +198,7 @@ namespace li
 
     template<typename Type, typename Type2> inline void constructPointer( Type* p, Type2 par )
     {
-        new( static_cast<void*>( p ) ) Type( par );
+        new( static_cast<void*>( p ) ) Type( std::forward<Type2>( par ) );
     }
 
     template<typename Type> inline void destructPointer( Type* p )

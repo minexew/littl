@@ -87,9 +87,13 @@ namespace li
 
             static void releaseBuckets( Bucket* buckets, Size numBuckets );
 
+            HashMap( const HashMap<Key, Value, Hash, getHash, Size>& other );
+
         public:
             HashMap( Size shiftAmount = 2 );
+            HashMap( HashMap<Key, Value, Hash, getHash, Size>&& other );
             ~HashMap();
+            HashMap<Key, Value, Hash, getHash, Size>& operator =( HashMap<Key, Value, Hash, getHash, Size>&& other );
 
             void clear();
             Value* find( const Key& key );
@@ -111,9 +115,34 @@ namespace li
         resize( shiftAmount );
     }
 
+    li_member_ HashMap( HashMap<Key, Value, Hash, getHash, Size>&& other )
+            : buckets( other.buckets ), numBuckets( other.numBuckets ), numEntries( other.numEntries ), shiftAmount( other.shiftAmount )
+    {
+        other.buckets = nullptr;
+        other.numBuckets = nullptr;
+        other.numEntries = 0;
+        other.shiftAmount = 0;
+    }
+
     li_member_ ~HashMap()
     {
         clear();
+    }
+
+    template<typename Key, typename Value, typename Hash, Hash ( *getHash )( const Key& ), typename Size>
+    HashMap<Key, Value, Hash, getHash, Size>& li_this::operator =( HashMap<Key, Value, Hash, getHash, Size>&& other )
+    {
+        buckets = other.buckets;
+        numBuckets = other.numBuckets;
+        numEntries = other.numEntries;
+        shiftAmount = other.shiftAmount;
+
+        other.buckets = nullptr;
+        other.numBuckets = 0;
+        other.numEntries = 0;
+        other.shiftAmount = 0;
+
+        return *this;
     }
 
     li_member( void ) clear()
@@ -308,7 +337,7 @@ namespace li
         if ( !getOrSetWithoutInitialization( std::forward<Key>( key ), pair ) )
             return pair->value;
 
-        constructPointer( &pair->value, std::forward<Value>( value ) );
+        constructPointer( &pair->value, std::move( value ) );
         return pair->value;
     }
 
