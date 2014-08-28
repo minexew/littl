@@ -49,7 +49,7 @@ namespace li
 
                 return _fullpath( fullPath, path, lengthof( fullPath ) );
 #else
-                const char* realPath = realpath( path, nullptr );
+		char* realPath = realpath( path, nullptr );
                 String absolutePath( realPath );
 
                 free( realPath );
