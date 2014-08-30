@@ -44,7 +44,9 @@
 #define li_compiler_name        "Microsoft Visual C++"
 
 // Kinda pointless as we only support 11.0+
-#if _MSC_VER == 1700
+#if _MSC_VER == 1800
+#define li_compiler_version     "12.0 (Visual Studio 2013)"
+#elif _MSC_VER == 1700
 #define li_compiler_version     "11.0 (Visual Studio 2012)"
 #elif  _MSC_VER == 1600
 #define li_compiler_version     "10.0 (Visual Studio 2010)"
