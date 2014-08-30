@@ -336,9 +336,12 @@ namespace li
     li_member( Value& ) set( Key&& key, Value&& value )
     {
         Pair* pair;
-        
+
         if ( !getOrSetWithoutInitialization( std::forward<Key>( key ), pair ) )
+        {
+            pair->value = std::move( value );
             return pair->value;
+        }
 
         constructPointer( &pair->value, std::move( value ) );
         return pair->value;
