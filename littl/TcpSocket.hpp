@@ -35,7 +35,10 @@ namespace li
                 idle, listening, connecting, host, connected
             };
 
-            static TcpSocket* create( bool blocking = false );
+            using InputStream::read;
+            using OutputStream::write;
+
+            static std::unique_ptr<TcpSocket> create( bool blocking = false );
             virtual ~TcpSocket() {}
 
             virtual const char* getErrorDesc() = 0;
@@ -47,7 +50,7 @@ namespace li
 
             // Connections
             virtual bool listen( uint16_t port ) = 0;
-            virtual TcpSocket* accept( bool block ) = 0;
+            virtual std::unique_ptr<TcpSocket> accept( bool block ) = 0;
 
             virtual bool connect( const char* host, uint16_t port, bool block ) = 0;
             virtual bool connectFinished( bool &success ) = 0;
@@ -64,7 +67,5 @@ namespace li
 
             // Direct access
             virtual size_t readUnbuffered( void* buffer, size_t maxlen ) = 0;
-
-            li_ReferencedClass_override( TcpSocket )
     };
 }

@@ -32,8 +32,6 @@
 #include <libkern/OSAtomic.h>
 #endif
 
-#define li_synchronized(mutex_) CriticalSection li_cs_((mutex_));
-
 namespace li
 {
 #ifdef li_MSW

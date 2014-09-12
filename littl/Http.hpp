@@ -115,7 +115,7 @@ namespace li
     {
         String host;
 
-        TcpSocket* session;
+        std::unique_ptr<TcpSocket> session;
         HttpRequest* currentRequest;
         List<HttpRequest*> queue;
 
@@ -128,7 +128,6 @@ namespace li
 
         public:
             HttpSession( const char* host );
-            ~HttpSession();
 
             void cancelAllRequests();
             const String& getHostName() const;

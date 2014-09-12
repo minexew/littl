@@ -29,7 +29,7 @@ namespace li
 {
     struct SockAddress;
 
-    class UdpSocket: public ReferencedClass
+    class UdpSocket
     {
         public:
             static UdpSocket* create();
@@ -47,7 +47,5 @@ namespace li
             virtual bool receive( ArrayIOStream& buffer, Timeout timeout = Timeout(0) ) = 0;
             virtual bool send( SockAddress* to, const void* data, size_t length ) = 0;
             bool send( SockAddress* to, const ArrayIOStream& buffer ) { return send( to, buffer.c_array(), ( size_t ) buffer.getSize() ); }
-
-            li_ReferencedClass_override( UdpSocket )
     };
 }

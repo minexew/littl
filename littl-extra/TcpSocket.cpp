@@ -66,7 +66,7 @@ namespace li
             virtual void setDelayedSending( bool enabled ) override;
 
             virtual bool listen( uint16_t port ) override;
-            virtual TcpSocket* accept( bool block ) override;
+            virtual std::unique_ptr<TcpSocket> accept( bool block ) override;
 
             virtual bool connect( const char* host, uint16_t port, bool block ) override;
             virtual bool connectFinished( bool &success ) override;
@@ -82,8 +82,8 @@ namespace li
             virtual bool isReadable() override;
             virtual bool isWritable() override;
 
-            virtual size_t rawRead( void* out, size_t length ) override;
-            virtual size_t rawWrite( const void* in, size_t length ) override;
+            virtual size_t read( void* out, size_t length ) override;
+            virtual size_t write( const void* in, size_t length ) override;
     };
 
     TcpSocketImpl::TcpSocketImpl()
@@ -114,7 +114,7 @@ namespace li
         disconnect();
     }
 
-    TcpSocket* TcpSocketImpl::accept( bool block )
+    std::unique_ptr<TcpSocket> TcpSocketImpl::accept( bool block )
     {
         if ( state != listening )
             return nullptr;
@@ -130,7 +130,7 @@ namespace li
             return nullptr;
 
         // Create and return a new class instance
-        Reference<TcpSocketImpl> inst = new TcpSocketImpl;
+        std::unique_ptr<TcpSocketImpl> inst(new TcpSocketImpl);
 
         inst->state = host;
         inst->sock = clientSocket;
@@ -140,7 +140,7 @@ namespace li
         inst->delayEnabled = delayEnabled;
 
         inst->updateSocket();
-        return inst.detach();
+        return std::move( inst );
     }
 
     bool TcpSocketImpl::connect( const char* host, uint16_t port, bool block )
@@ -372,53 +372,9 @@ namespace li
         return true;
     }
 
-    size_t TcpSocketImpl::rawRead( void* out, size_t length )
+    size_t TcpSocketImpl::read( void* out, size_t length )
     {
         return read( out, length, Timeout(), false ) ? length : 0;
-    }
-
-    size_t TcpSocketImpl::rawWrite( const void* input, size_t length )
-    {
-        if ( state != host && state != connected )
-            return 0;
-
-        size_t sentTotal = 0;
-
-        while ( sentTotal < length )
-        {
-            int sent = ::send( sock, ( char* ) input + sentTotal, length - sentTotal, 0 );
-
-            // Socket error
-            if ( sent <= 0
-#ifdef __li_MSW
-                    && WSAGetLastError() != WSAEWOULDBLOCK )
-#else
-                    && errno != EAGAIN )
-#endif
-                return sentTotal;
-
-            if ( sent > 0 )
-            {
-                sentTotal += sent;
-
-                if ( sentTotal >= length )
-                    break;
-            }
-
-            // This can (and will) get pretty nasty if we have to wait for the driver to flush its buffer,
-            // but there is probably no nice single-threaded solution.
-
-            // TODO: Is there any way we can help the user code with this?
-
-            fd_set socketSet;
-            FD_ZERO( &socketSet );
-            FD_SET( sock, &socketSet );
-
-            if ( select( 0, 0, &socketSet, 0, 0 ) < 0 )
-                return sentTotal;
-        }
-
-        return sentTotal;
     }
 
     bool TcpSocketImpl::read( void* output, size_t length, Timeout timeout, bool peek )
@@ -550,7 +506,7 @@ namespace li
     {
         uint32_t len = length;
 
-        return rawWrite( &len, sizeof( len ) ) == sizeof( len ) && rawWrite( data, length ) == length;
+        return write( &len, sizeof( len ) ) == sizeof( len ) && write( data, length ) == length;
     }
 
     void TcpSocketImpl::setActuallyBlocking( bool blocking )
@@ -596,8 +552,52 @@ namespace li
            setsockopt( sock, IPPROTO_TCP, TCP_NODELAY, ( char* ) &flag, sizeof( int ) );
     }
 
-    TcpSocket* TcpSocket::create( bool blocking )
+    size_t TcpSocketImpl::write( const void* input, size_t length )
     {
-        return new TcpSocketImpl( blocking );
+        if ( state != host && state != connected )
+            return 0;
+
+        size_t sentTotal = 0;
+
+        while ( sentTotal < length )
+        {
+            int sent = ::send( sock, ( char* ) input + sentTotal, length - sentTotal, 0 );
+
+            // Socket error
+            if ( sent <= 0
+#ifdef __li_MSW
+                    && WSAGetLastError() != WSAEWOULDBLOCK )
+#else
+                    && errno != EAGAIN )
+#endif
+                return sentTotal;
+
+            if ( sent > 0 )
+            {
+                sentTotal += sent;
+
+                if ( sentTotal >= length )
+                    break;
+            }
+
+            // This can (and will) get pretty nasty if we have to wait for the driver to flush its buffer,
+            // but there is probably no nice single-threaded solution.
+
+            // TODO: Is there any way we can help the user code with this?
+
+            fd_set socketSet;
+            FD_ZERO( &socketSet );
+            FD_SET( sock, &socketSet );
+
+            if ( select( 0, 0, &socketSet, 0, 0 ) < 0 )
+                return sentTotal;
+        }
+
+        return sentTotal;
+    }
+
+    std::unique_ptr<TcpSocket> TcpSocket::create( bool blocking )
+    {
+        return std::unique_ptr<TcpSocket>( new TcpSocketImpl( blocking ) );
     }
 }

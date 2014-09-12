@@ -64,55 +64,76 @@ namespace li
             FILE* handle;
             LastAccess lastAccess;
 
-        protected:
-            File( const char* fileName, const char* mode = "rb" )
+            File( const File& other ) = delete;
+
+    	public:
+            using InputStream::read;
+            using OutputStream::write;
+
+            File( const char* fileName, const char* mode )
             {
                 handle = fopen( fileName, mode );
             }
 
-            virtual ~File()
-    		{
-                if ( handle )
-                    fclose( handle );
+            File( const char* fileName, bool forWriting = false )
+            {
+                handle = fopen( fileName, forWriting ? "wb" : "rb" );
             }
 
-    	public:
-            li_ReferencedClass_override( File )
+            File( File&& other )
+                    : handle( other.handle ), lastAccess( other.lastAccess )
+            {
+                other.handle = nullptr;
+            }
 
     		File( FILE* handle ) : handle( handle )
     		{
     		    lastAccess = Access_none;
             }
 
+            virtual ~File()
+    		{
+                close();
+            }
+
+            void close()
+            {
+                if ( handle )
+                {
+                    fclose( handle );
+                    handle = nullptr;
+                }
+            }
+
             static File* open( const char* fileName, bool forWriting = false )
             {
-                FILE* handle = fopen( fileName, forWriting ? "wb" : "rb" );
+                File f( fileName, forWriting );
 
-                if ( handle == nullptr )
+                if ( f )
+                    return new File( std::move( f ) );
+                else
                     return nullptr;
-
-                return new File( handle );
             }
 
             static File* open( const char* fileName, const char* mode )
             {
-                FILE* handle = fopen( fileName, mode );
+                File f( fileName, mode );
 
-                if ( handle == nullptr )
+                if ( f )
+                    return new File( std::move( f ) );
+                else
                     return nullptr;
-
-                return new File( handle );
             }
 
             static bool copy( const char* from, const char* to )
             {
-                Reference<File> source = File::open( from );
-                Reference<File> dest = File::open( to, true );
+                File source( from );
+                File dest( to, true );
 
-                if ( !li::isReadable( source ) || !li::isWritable( dest ) )
+                if ( !source.isReadable() || !dest.isWritable() )
                     return false;
 
-                return dest->copyFrom( source ) == source->getSize();
+                return dest.copyFrom( &source ) == source.getSize();
             }
 
             static String formatFileName( const char* fileName )
@@ -132,11 +153,6 @@ namespace li
                 return fileName;*/
 
                 return ( String ) "`" + fileName + "`";
-            }
-
-            static String getDirectoryFromPath( const String& path )
-            {
-                return path.leftPart( std::max<intptr_t>( 0, std::max( path.findLastChar( '/' ), path.findLastChar( '\\' ) ) ) );
             }
 
             virtual uint64_t getPos()
@@ -170,7 +186,7 @@ namespace li
                 return size;
             }
 
-            bool isOk() const
+            operator bool() const
             {
                 return handle != 0;
             }
@@ -183,6 +199,41 @@ namespace li
             virtual bool isWritable()
             {
                 return handle != 0;
+            }
+
+            virtual size_t read( void* out, size_t readSize ) override
+            {
+                if ( lastAccess == Access_write )
+                    fflush( handle );
+
+                lastAccess = Access_read;
+
+                return fread( out, 1, readSize, handle );
+            }
+
+            virtual bool setPos( uint64_t pos )
+            {
+                if ( handle )
+                {
+#if defined( __li_MSW ) && !defined( __GNUC__ )
+                    _fseeki64( handle, pos, SEEK_SET );
+#else
+                    fseek( handle, pos, SEEK_SET );
+#endif
+                    return true;
+                }
+                else
+                    return false;
+            }
+
+            virtual size_t write( const void* in, size_t writeSize ) override
+            {
+                if ( lastAccess == Access_read )
+                    fflush( handle );
+
+                lastAccess = Access_write;
+
+                return fwrite( in, 1, writeSize, handle );
             }
 
             static bool moveFile( const char* fileName, const char* newFileName )
@@ -203,56 +254,6 @@ namespace li
 
                 fileSize = stat.sizeInBytes;
                 return true;
-            }
-
-            virtual size_t rawRead( void* out, size_t readSize )
-            {
-                if ( lastAccess == Access_write )
-                    fflush( handle );
-
-                lastAccess = Access_read;
-
-                return fread( out, 1, readSize, handle );
-            }
-
-            virtual size_t rawWrite( const void* in, size_t writeSize )
-            {
-                if ( lastAccess == Access_read )
-                    fflush( handle );
-
-                lastAccess = Access_write;
-
-                return fwrite( in, 1, writeSize, handle );
-            }
-
-            virtual size_t read( void* out, size_t readSize )
-            {
-                return rawRead( out, readSize );
-            }
-
-            static String read( const char* fileName )
-            {
-                File file( fileName );
-
-                if ( file.isReadable() )
-                    return file.readWhole();
-                else
-                    return String();
-            }
-
-            virtual bool setPos( uint64_t pos )
-            {
-                if ( handle )
-                {
-#if defined( __li_MSW ) && !defined( __GNUC__ )
-                    _fseeki64( handle, pos, SEEK_SET );
-#else
-                    fseek( handle, pos, SEEK_SET );
-#endif
-                    return true;
-                }
-                else
-                    return false;
             }
 
             static bool statFileOrDirectory( const char* fileName, FileStat* stat_out )
@@ -298,17 +299,17 @@ namespace li
 #endif
             }
 
-            static String load( const char* fileName )
+            static String getContents( const char* fileName )
             {
                 return File( fileName ).readWhole();
             }
 
-            static int load( const char* fileName, List<String>& list )
+            static int getLines( const char* fileName, List<String>& list )
             {
                 return File( fileName ).readLines( list );
             }
 
-            static bool load( const char* fileName, void* data, size_t length )
+            static bool loadIntoBuffer( const char* fileName, void* data, size_t length )
             {
                 File file( fileName, "rb" );
 
@@ -318,7 +319,7 @@ namespace li
                 return file.read( data, length ) == length;
             }
 
-            static bool save( const char* fileName, const String& text )
+            static bool setContents( const char* fileName, const String& text )
             {
                 File file( fileName, "wb" );
 
@@ -328,7 +329,7 @@ namespace li
                 return file.write( text.c_str(), text.getNumBytes() ) == text.getNumBytes();
             }
 
-            static bool save( const char* fileName, const void* data, size_t length )
+            static bool saveBuffer( const char* fileName, const void* data, size_t length )
             {
                 File file( fileName, "wb" );
 

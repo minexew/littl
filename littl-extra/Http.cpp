@@ -48,13 +48,8 @@ namespace li
     }
 
     HttpSession::HttpSession( const char* host )
-            : host( host ), session( 0 ), currentRequest( 0 ), bufferSize( 0x1000 )
+            : host( host ), currentRequest( 0 ), bufferSize( 0x1000 )
     {
-    }
-
-    HttpSession::~HttpSession()
-    {
-        li::release( session );
     }
 
     void HttpSession::cancelAllRequests()
@@ -154,8 +149,7 @@ namespace li
             {
                 if ( !readLine( responseLine, currentRequest->timeout ) )
                 {
-                    delete session;
-                    session = 0;
+                    session.reset();
 
                     if ( currentRequest->connectionLost )
                     {
@@ -222,8 +216,7 @@ namespace li
                     {
                         currentRequest->fail( "Connection lost or timed out" );
 
-                        delete session;
-                        session = 0;
+                        session.reset();
                         break;
                     }
 
@@ -237,11 +230,8 @@ namespace li
             if ( !failed )
                 currentRequest->changeStatus( HttpRequest::successful );
 
-            if ( close && session )
-            {
-                delete session;
-                session = 0;
-            }
+            if ( close )
+                session.reset();
 
             delete currentRequest;
             currentRequest = 0;

@@ -27,6 +27,7 @@
 #include <littl/String.hpp>
 
 #include <ctime>
+#include <memory>
 
 namespace li
 {
@@ -67,6 +68,7 @@ namespace li
     class Seekable
     {
         public:
+            virtual ~Seekable() {}
             virtual uint64_t getPos() = 0;
             virtual uint64_t getSize() = 0;
             virtual bool setPos( uint64_t pos ) = 0;
@@ -82,23 +84,17 @@ namespace li
             }
     };
 
-    class InputStream: virtual public ReferencedClass
+    class InputStream
     {
         public:
-            li_ReferencedClass_override( InputStream )
-
+            virtual ~InputStream() {}
             virtual bool isReadable() = 0;
-            virtual size_t rawRead( void* out, size_t length ) = 0;
-
-            size_t read( void* out, size_t length )
-            {
-                return rawRead( out, length );
-            }
+            virtual size_t read( void* out, size_t length ) = 0;
 
             template <typename T> T read()
             {
                 T temp = 0;
-                rawRead( &temp, sizeof( T ) );
+                read( &temp, sizeof( T ) );
                 return temp;
             }
 
@@ -110,7 +106,7 @@ namespace li
 
             template <typename T> size_t readItems( T* out, size_t count )
             {
-                return rawRead( out, count * sizeof( T ) ) / sizeof( T );
+                return read( out, count * sizeof( T ) ) / sizeof( T );
             }
 
             template <typename T> T readUnsafe()
@@ -187,8 +183,6 @@ namespace li
     class SeekableInputStream: virtual public InputStream, virtual public Seekable
     {
         public:
-            li_ReferencedClass_override( SeekableInputStream )
-
             String readLine()
             {
                 if ( !isReadable() )
@@ -249,14 +243,12 @@ namespace li
             }
     };
 
-    class OutputStream: virtual public ReferencedClass
+    class OutputStream
     {
         public:
-            li_ReferencedClass_override( OutputStream )
-
+            virtual ~OutputStream() {}
             virtual bool isWritable() = 0;
-            //virtual size_t write( const void* input, size_t length ) = 0;
-            virtual size_t rawWrite( const void* in, size_t length ) = 0;
+            virtual size_t write( const void* in, size_t length ) = 0;
 
             size_t copyFrom( InputStream* input )
             {
@@ -294,11 +286,6 @@ namespace li
                 return write( ( const char* )text );
             }
 
-            size_t write( const void* data, size_t length )
-            {
-                return rawWrite( data, length );
-            }
-
             template <typename T> size_t write( const T& what )
             {
                 return write( &what, sizeof( what ) );
@@ -317,18 +304,13 @@ namespace li
 
             template <typename T> size_t writeItems( const T* data, size_t count )
             {
-                return rawWrite( data, count * sizeof( T ) ) / sizeof( T );
+                return write( data, count * sizeof( T ) ) / sizeof( T );
             }
 
     	    bool writeLine( const String& data = String() )
             {
                 return write( data + li_newLine );
             }
-
-    	    /*bool writeError( const String& data )
-            {
-                return write( ( String )"Error: " + data + __li_lineEnd );
-            }*/
 
             void writeString( const char* str )
             {
@@ -341,20 +323,14 @@ namespace li
 
     class SeekableOutputStream: virtual public OutputStream, virtual public Seekable
     {
-        public:
-            li_ReferencedClass_override( SeekableOutputStream )
     };
 
     class IOStream: virtual public InputStream, virtual public OutputStream
     {
-        public:
-            li_ReferencedClass_override( IOStream )
     };
 
     class SeekableIOStream: public IOStream, public SeekableInputStream, public SeekableOutputStream
     {
-        public:
-            li_ReferencedClass_override( SeekableIOStream )
     };
 
     class ArrayIOStream: public Array<uint8_t>, public SeekableIOStream
@@ -366,6 +342,9 @@ namespace li
             ArrayIOStream(const ArrayIOStream&);
 
         public:
+            using InputStream::read;
+            using OutputStream::write;
+
             ArrayIOStream() : index( 0 ), size( 0 )
             {
             }
@@ -468,7 +447,7 @@ namespace li
                 return true;
             }
 
-            virtual size_t rawRead( void* out, size_t length )
+            virtual size_t read( void* out, size_t length )
             {
                 if ( index >= size )
                     return 0;
@@ -479,32 +458,6 @@ namespace li
                 memcpy( out, getPtrUnsafe( index ), length );
                 index += length;
                 return length;
-            }
-
-            virtual size_t rawWrite( const void* input, size_t length )
-            {
-                if ( index + length > size )
-                {
-                    size = index + length;
-                    resize( size, true );
-                }
-
-                memcpy( getPtrUnsafe( index ), input, length );
-                index += length;
-                return length;
-            }
-
-            virtual void* rawWriteEmpty( size_t length )
-            {
-                if ( index + length > size )
-                {
-                    size = index + length;
-                    resize( size, true );
-                }
-
-                void* ret = getPtrUnsafe( index );
-                index += length;
-                return ret;
             }
 
             template <typename T> T* readObject()
@@ -528,22 +481,48 @@ namespace li
                 this->size = size;
             }
 
+            virtual size_t write( const void* input, size_t length )
+            {
+                if ( index + length > size )
+                {
+                    size = index + length;
+                    resize( size, true );
+                }
+
+                memcpy( getPtrUnsafe( index ), input, length );
+                index += length;
+                return length;
+            }
+
+            virtual void* writeEmpty( size_t length )
+            {
+                if ( index + length > size )
+                {
+                    size = index + length;
+                    resize( size, true );
+                }
+
+                void* ret = getPtrUnsafe( index );
+                index += length;
+                return ret;
+            }
+
             template <typename T> T* writeItemsEmpty( size_t count )
             {
-                return reinterpret_cast<T*>( rawWriteEmpty( count * sizeof( T ) ) );
+                return reinterpret_cast<T*>( writeEmpty( count * sizeof( T ) ) );
             }
     };
 
     class SeekableInputStreamSegment : public SeekableInputStream
     {
-        Reference<SeekableInputStream> stream;
+        std::shared_ptr<SeekableInputStream> stream;
         uint64_t pos, segmentOffset, segmentLength;
 
         private:
             SeekableInputStreamSegment(const SeekableInputStreamSegment&);
 
         public:
-            SeekableInputStreamSegment( SeekableInputStream* stream, uint64_t offset, uint64_t length )
+            SeekableInputStreamSegment( std::shared_ptr<SeekableInputStream> stream, uint64_t offset, uint64_t length )
                     : stream( stream ), pos( 0 ), segmentOffset( offset ), segmentLength( length )
             {
                 stream->setPos( segmentOffset );
@@ -573,7 +552,7 @@ namespace li
                 return pos < segmentLength;
             }
 
-            virtual size_t rawRead( void* out, size_t length ) override
+            virtual size_t read( void* out, size_t length ) override
             {
                 if ( pos >= segmentLength )
                     return 0;
@@ -582,19 +561,9 @@ namespace li
                     length = (size_t)(segmentLength - pos);
 
                 pos += length;
-                return stream->rawRead( out, length );
+                return stream->read( out, length );
             }
     };
-
-    inline bool isReadable( InputStream* input )
-    {
-        return input && input->isReadable();
-    }
-
-    inline bool isWritable( OutputStream* output )
-    {
-        return output && output->isWritable();
-    }
 
 #ifdef li_little_endian
     template<> inline bool InputStream::readLE<uint8_t>(uint8_t* value)
