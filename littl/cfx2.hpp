@@ -31,37 +31,33 @@
 
 namespace cfx2
 {
-#if libcfx2_version >= 0x0090
-    inline void cfx2_release_node_2( cfx2_Node** node )
-    {
-        cfx2_release_node( node );
-    }
-#endif
-
     class Node
     {
         public:
             cfx2_Node* node;
 
-            class Iterator
+            template <typename Node>
+            class generic_iterator
             {
                 Node& node;
                 intptr_t i;
 
-                Iterator& operator = ( const Iterator& );
-
                 public:
-                    Iterator( Node& node, intptr_t i ) : node( node ), i( i ) {}
+                    generic_iterator(Node& node, intptr_t i) : node(node), i(i) {}
 
-                    operator Node() { return node[i]; }
-                    Node operator -> () { return node[i]; }
+                    //operator Node() { return node[i]; }
+                    Node* operator -> () { return &node[i]; }
                     Node operator * () { return node[i]; }
                     void operator ++() { i++; }
-                    void operator --() { i--; }
+                    //void operator --() { i--; }
+
+                    bool operator != (const generic_iterator<Node>& other) const { return node != other.node || i != other.i; }
 
                     size_t getIndex() const { return i; }
-                    bool isValid() const { return i >= 0 && ( size_t ) i < node.getNumChildren(); }
+                    bool isValid() const { return i >= 0 && (size_t)i < node.getNumChildren(); }
             };
+
+            typedef generic_iterator<const Node> const_iterator;
 
         public:
             Node( cfx2_Node* node = nullptr ) : node( node )
@@ -80,11 +76,7 @@ namespace cfx2
 
             Node clone()
             {
-#if libcfx2_version >= 0x0090
                 return cfx2_clone_node( node, cfx2_clone_recursive );
-#else
-                return cfx2_clone_node( node );
-#endif
             }
 
             Node createChild( const char* name, const char* text = nullptr, bool unique = false )
@@ -97,7 +89,7 @@ namespace cfx2
                 return Node( cfx2_find_child( node, name ) );
             }
 
-            const char* getAttrib( const char* name )
+            const char* getAttrib( const char* name ) const
             {
                 const char* value = 0;
 
@@ -115,31 +107,6 @@ namespace cfx2
                 return (int) value;
             }
 
-#if libcfx2_version < 0x0090
-            List* getChildren()
-            {
-                if ( !node )
-                    return 0;
-
-                return newList( node->children, false );
-            }
-#endif
-
-            Iterator getIterator( bool reverse = false )
-            {
-                return Iterator( *this, reverse ? getNumChildren() - 1 : 0 );
-            }
-
-#if libcfx2_version < 0x0090
-            List* getList( const char* command )
-            {
-                if ( !node )
-                    return 0;
-
-                return newList( cfx2_get_list( node, command ), true );
-            }
-#endif
-
             const char* getName()
             {
                 if ( !node )
@@ -148,9 +115,9 @@ namespace cfx2
                 return node->name;
             }
 
-            size_t getNumChildren()
+            size_t getNumChildren() const
             {
-                return ( node != nullptr ) ? cfx2_list_length(node->children) : 0;
+                return ( node != nullptr ) ? cfx2_list_length( node->children ) : 0;
             }
 
             const char* getText()
@@ -171,13 +138,6 @@ namespace cfx2
                 return node == nullptr;
             }
 
-#if libcfx2_version < 0x0090
-            void merge( cfx2::Node with )
-            {
-                cfx2_merge_nodes_2( node, with.node, &node, cfx2_release_left | cfx2_release_right );
-            }
-#endif
-
             bool query( const char* path, bool allowModifications = true )
             {
                 return cfx2_query( node, path, allowModifications, nullptr ) == cfx2_ok;
@@ -192,7 +152,7 @@ namespace cfx2
 
             void release()
             {
-                cfx2_release_node_2( &node );
+                cfx2_release_node( &node );
             }
 
             void removeChild( Node child )
@@ -217,6 +177,30 @@ namespace cfx2
 
                 return cfx2_item( node->children, index, cfx2_Node* );
             }
+
+            const Node operator [] (size_t index) const
+            {
+                if ( !node )
+                    return 0;
+
+                return cfx2_item( node->children, index, cfx2_Node* );
+            }
+
+            bool operator != (const Node& other) const
+            {
+                return node != other.node;
+            }
+
+            // iterators
+            const const_iterator begin() const
+            {
+                return const_iterator( *this, 0 );
+            }
+
+            const const_iterator end() const
+            {
+                return const_iterator( *this, getNumChildren() );
+            }
     };
 
     class Document : public Node
@@ -226,11 +210,7 @@ namespace cfx2
         public:
             Document()
             {
-#if libcfx2_version >= 0x0090
                 lastError = cfx2_create_node( &node );
-#else
-                lastError = cfx2_create_node( 0, &node );
-#endif
             }
 
             Document( const char* fileName )
@@ -245,21 +225,17 @@ namespace cfx2
 
             ~Document()
             {
-                cfx2_release_node_2( &node );
+                cfx2_release_node( &node );
             }
 
             void create( const char* name = nullptr )
             {
-                cfx2_release_node_2( &node );
+                cfx2_release_node( &node );
 
-#if libcfx2_version >= 0x0090
                 lastError = cfx2_create_node( &node );
 
                 if ( lastError == cfx2_ok )
                     lastError = cfx2_rename_node( node, name );
-#else
-                lastError = cfx2_create_node( name, &node );
-#endif
             }
 
             const char* getErrorDesc()
@@ -274,33 +250,25 @@ namespace cfx2
 
             bool load( const char* fileName )
             {
-                cfx2_release_node_2( &node );
+                cfx2_release_node( &node );
 
-#if libcfx2_version >= 0x0090
                 lastError = cfx2_read_file( &node, fileName, nullptr );
-#else
-                lastError = cfx2_read_file( fileName, &node );
-#endif
 
                 return (lastError == cfx2_ok);
             }
 
             bool loadFrom( li::SeekableInputStream* input )
             {
-                cfx2_release_node_2( &node );
+                cfx2_release_node( &node );
 
-#if libcfx2_version >= 0x0090
                 lastError = cfx2_read_from_string( &node, input->readWhole(), nullptr );
-#else
-                lastError = cfx2_read_from_string( input->readWhole(), &node );
-#endif
 
                 return (lastError == cfx2_ok);
             }
 
             bool loadFromString( const char* doc )
             {
-                cfx2_release_node_2( &node );
+                cfx2_release_node( &node );
 
                 if ( doc == nullptr )
                 {
@@ -308,11 +276,7 @@ namespace cfx2
                     return true;
                 }
 
-#if libcfx2_version >= 0x0090
                 return cfx2_read_from_string( &node, doc, nullptr ) == cfx2_ok;
-#else
-                return cfx2_read_from_string( doc, &node ) == cfx2_ok;
-#endif
             }
 
             bool save( const char* fileName )
@@ -351,7 +315,7 @@ namespace cfx2
 
             Document& operator = ( Node other )
             {
-                cfx2_release_node_2( &node );
+                cfx2_release_node( &node );
                 node = other.node;
 
                 return *this;
