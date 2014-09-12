@@ -66,6 +66,7 @@
 // TODO: Why are we setting this?
 #define WINVER 0x0501
 #endif
+#define NOMINMAX
 #include <windows.h>
 
 #define __li_MSW
@@ -164,26 +165,6 @@ namespace li
             return max;
         else
             return value;
-    }
-
-    template<typename Type> inline Type minimum( Type a, Type b )
-    {
-        return a < b ? a : b;
-    }
-
-    template<typename Type> inline Type minimum( Type a, Type b, Type c )
-    {
-        return minimum( minimum( a, b ), c );
-    }
-
-    template<typename Type> inline Type maximum( Type a, Type b )
-    {
-        return a > b ? a : b;
-    }
-
-    template<typename Type> inline Type maximum( Type a, Type b, Type c )
-    {
-        return maximum( maximum( a, b ), c );
     }
 
     template<typename Type> inline Type round( Type value )

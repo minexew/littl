@@ -69,7 +69,7 @@ namespace li
 
             String getDirectory() const
             {
-                intptr_t offset = maximum( path.findLastChar( '/' ), path.findLastChar( '\\' ) );
+                intptr_t offset = std::max( path.findLastChar( '/' ), path.findLastChar( '\\' ) );
 
                 if ( offset < 0 )
                     return ".";
@@ -89,7 +89,7 @@ namespace li
 
             String getFileName() const
             {
-                intptr_t offset = maximum( path.findLastChar( '/' ), path.findLastChar( '\\' ) );
+                intptr_t offset = std::max( path.findLastChar( '/' ), path.findLastChar( '\\' ) );
 
                 if ( offset < 0 )
                     return path;

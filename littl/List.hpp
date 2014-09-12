@@ -238,7 +238,7 @@ namespace li
                 if ( count )
                 {
                     li_base::load( source, count, offset );
-                    length = maximum( length, offset + count );
+                    length = std::max( length, offset + count );
                 }
             }
 

@@ -730,7 +730,7 @@ namespace li
         StringTpl format = "%" + ( width >= 0 ? ( StringTpl ) width : "" ) + "g";
         StringTpl numBuffer;
 
-        numBuffer.setBuffer( maximum( width, 30 ) );
+        numBuffer.setBuffer( std::max( width, 30 ) );
         snprintf( numBuffer.data, numBuffer.capacity, format, value );
 
         return numBuffer.c_str();
@@ -741,7 +741,7 @@ namespace li
         StringTpl format = "%" + ( width >= 0 ? ( StringTpl ) width : "" ) + ( base == decimal ? "i" : "X" );
         StringTpl numBuffer;
 
-        numBuffer.setBuffer( maximum( width, 30 ) );
+        numBuffer.setBuffer( std::max( width, 30 ) );
         snprintf( numBuffer.data, numBuffer.capacity, format, value );
 
         return numBuffer.c_str();

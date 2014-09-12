@@ -25,6 +25,8 @@
 
 #include <littl/Allocator.hpp>
 
+#include <algorithm>
+
 #pragma warning ( push )
 
 // warning C4127: conditional expression is constant
@@ -148,7 +150,7 @@ namespace li
         if ( !( options & ArrayOptions::noBoundsChecking ) )
         {
             if ( field >= capacity )
-                resize( li::maximum<TCapacity>( field * 4 / 3, 4 ) );
+                resize( std::max<TCapacity>( field * 4 / 3, 4 ) );
         }
 
         return data[field];
@@ -159,7 +161,7 @@ namespace li
         if ( !( options & ArrayOptions::noBoundsChecking ) )
         {
             if ( field >= capacity )
-                resize( li::maximum<TCapacity>( field * 4 / 3, 4 ) );
+                resize( std::max<TCapacity>( field * 4 / 3, 4 ) );
         }
 
         return &data[field];
@@ -188,8 +190,8 @@ namespace li
             return;
 
         // Clip the values to the array
-        if ( maximum( destField + length, srcField + length ) > capacity )
-            resize( maximum( destField + length, srcField + length ) );
+        if ( std::max( destField + length, srcField + length ) > capacity )
+            resize( std::max( destField + length, srcField + length ) );
 
         // Safely release all pointers in the destination area
         if ( destField < srcField )

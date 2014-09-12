@@ -206,7 +206,7 @@ namespace li
             return false;
         }
 
-        memcpy( &peer, current->ai_addr, minimum<int>( sizeof( peer ), current->ai_addrlen ) );
+        memcpy( &peer, current->ai_addr, std::min<int>( sizeof( peer ), current->ai_addrlen ) );
 
         // We can release the lookup results now
         freeaddrinfo( results );
