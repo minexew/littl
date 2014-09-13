@@ -28,47 +28,34 @@
 
 namespace li
 {
-    /*class SeekableInputStreamByteIO : public bleb::ByteIO
+    class InputStreamByteIO : public bleb::ByteIO
     {
         public:
-            SeekableInputStreamByteIO(SeekableInputStream* ios = nullptr) : ios(ios) {}
+            InputStreamByteIO(InputStream* is = nullptr) : is(is) {}
 
-            void set(SeekableIOStream* ios) { this->ios = ios; }
+            void set(InputStream* is) { this->is = is; }
 
             virtual void close() override {}
-            virtual uint64_t getSize() override { return ios->getSize(); }
+            virtual uint64_t getSize() override { return is->getSize(); }
 
             virtual bool getBytesAt(uint64_t pos, uint8_t* buffer, size_t count) override
             {
-                return ios->setPos(pos) && ios->read(buffer, count) == count;
+                return is->setPos(pos) && is->read(buffer, count) == count;
             }
 
             virtual bool setBytesAt(uint64_t pos, const uint8_t* buffer, size_t count) override
             {
-                return ios->setPos(pos) && ios->write(buffer, count) == count;
+                return false;
             }
 
             virtual bool clearBytesAt(uint64_t pos, uint64_t count) override
             {
-                static const uint8_t empty[256] = {};
-
-                while (count > sizeof(empty)) {
-                    if (!setBytesAt(pos, empty, sizeof(empty)))
-                        return false;
-
-                    pos += sizeof(empty);
-                    count -= sizeof(empty);
-                }
-
-                if (!setBytesAt(pos, empty, (size_t) count))
-                    return false;
-
-                return true;
+                return false;
             }
 
         private:
-            SeekableInputStream* ios;
-    };*/
+            InputStream* is;
+    };
 
     class StreamByteIO : public bleb::ByteIO
     {
