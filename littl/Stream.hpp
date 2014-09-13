@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2008-2013 Xeatheran Minexew
+    Copyright (c) 2008-2014 Xeatheran Minexew
 
     This software is provided 'as-is', without any express or implied
     warranty. In no event will the authors be held liable for any damages
@@ -31,6 +31,9 @@
 
 namespace li
 {
+    typedef uint64_t FilePos;
+    typedef uint64_t FileSize;
+
     struct Timeout
     {
         bool infinite;
@@ -65,13 +68,20 @@ namespace li
         }
     };
 
-    class Seekable
+    class Stream
     {
         public:
-            virtual ~Seekable() {}
-            virtual uint64_t getPos() = 0;
-            virtual uint64_t getSize() = 0;
-            virtual bool setPos( uint64_t pos ) = 0;
+            virtual ~Stream() {}
+
+            virtual bool finite() = 0;
+            virtual bool seekable() = 0;
+
+            virtual void flush() = 0;
+            virtual const char* getErrorDesc() = 0;
+
+            virtual FilePos getPos() = 0;
+            virtual bool setPos( FilePos pos ) = 0;
+            virtual FileSize getSize() = 0;
 
             bool rewind()
             {
@@ -84,19 +94,11 @@ namespace li
             }
     };
 
-    class InputStream
+    class InputStream : virtual public Stream
     {
         public:
-            virtual ~InputStream() {}
-            virtual bool isReadable() = 0;
+            virtual bool eof() = 0;
             virtual size_t read( void* out, size_t length ) = 0;
-
-            template <typename T> T read()
-            {
-                T temp = 0;
-                read( &temp, sizeof( T ) );
-                return temp;
-            }
 
             template <typename T> bool readLE(T* value)
             {
@@ -104,16 +106,10 @@ namespace li
                 return false;
             }
 
-            template <typename T> size_t readItems( T* out, size_t count )
+            template <typename T> bool readByte(T* value_out)
             {
-                return read( out, count * sizeof( T ) ) / sizeof( T );
-            }
-
-            template <typename T> T readUnsafe()
-            {
-                T temp;
-                read( &temp, sizeof( T ) );
-                return temp;
+                static_assert(sizeof(T) == 1, "Type is not 1 byte in size");
+                return read(value_out, 1) == 1;
             }
 
             unsigned readCharUtf8( Unicode::Char& c )
@@ -149,11 +145,8 @@ namespace li
                     return Unicode::invalidChar;
             }
 
-            String readLine( bool useMacEnding = false )
+            String readLine()
             {
-                if ( !isReadable() )
-                    return String();
-
                 char next;
                 String line;
 
@@ -161,11 +154,22 @@ namespace li
                     switch ( next )
                     {
                         case '\n': return line;
-                        case '\r': if ( useMacEnding ) return line; break;
+                        case '\r': break;
                         default: line.append( next );
                     }
 
                 return line;
+            }
+
+            size_t readLines( List<String>& list )
+            {
+                size_t count = 0;
+
+                for ( String line; !( line = readLine() ).isEmpty(); count++ )
+                    list.add( std::move( line ) );
+
+                list.add( String() );
+                return count + 1;
             }
 
             String readString()
@@ -178,58 +182,9 @@ namespace li
 
                 return value;
             }
-    };
-
-    class SeekableInputStream: virtual public InputStream, virtual public Seekable
-    {
-        public:
-            String readLine()
-            {
-                if ( !isReadable() )
-                    return String();
-
-                char next = 0;
-                String line;
-
-                while ( read( &next, 1 ) )
-                {
-                    switch ( next )
-                    {
-                        case '\n':
-                            return line;
-
-                        case '\r':
-                            if ( read( &next, 1 ) && next != '\n' )
-                                seek( -1 );
-
-                            return line;
-
-                        default:
-                            line.append( next );
-                    }
-                }
-
-                return line;
-            }
-
-            int readLines( List<String>& list )
-            {
-                if ( !isReadable() )
-                    return -1;
-
-                int count = 0;
-                for ( String line; !( line = readLine() ).isEmpty(); count++ )
-                    list.add( line );
-
-                list.add( String() );
-                return count + 1;
-            }
 
             String readWhole()
             {
-                if ( !isReadable() )
-                   return String();
-
                 size_t streamSize = ( size_t ) getSize();
 
                 char* buffer = new char [streamSize + 1];
@@ -243,16 +198,15 @@ namespace li
             }
     };
 
-    class OutputStream
+    class OutputStream : virtual public Stream
     {
         public:
-            virtual ~OutputStream() {}
-            virtual bool isWritable() = 0;
             virtual size_t write( const void* in, size_t length ) = 0;
 
+            template <size_t bufferSize = 4096>
             size_t copyFrom( InputStream* input )
             {
-                uint8_t buffer[0x1000];
+                uint8_t buffer[bufferSize];
                 size_t total = 0;
 
                 for ( ; ; )
@@ -281,30 +235,15 @@ namespace li
                 return false;
             }
 
-            bool write( char* text )
+            bool write( char c )
             {
-                return write( ( const char* )text );
-            }
-
-            template <typename T> size_t write( const T& what )
-            {
-                return write( &what, sizeof( what ) );
+                return write( &c, 1 ) == 1;
             }
 
             template <typename T> bool writeLE(const T value)
             {
                 static_assert(sizeof(T) == 0, "Not implemented for this data type");
                 return false;
-            }
-
-    	    bool write( const String& text )
-            {
-                return write( text.c_str(), text.getNumBytes() ) > 0;
-            }
-
-            template <typename T> size_t writeItems( const T* data, size_t count )
-            {
-                return write( data, count * sizeof( T ) ) / sizeof( T );
             }
 
     	    bool writeLine( const String& data = String() )
@@ -317,23 +256,15 @@ namespace li
                 if ( str )
                     write( str, strlen( str ) );
 
-                write<char>( 0 );
+                write( char( 0 ) );
             }
-    };
-
-    class SeekableOutputStream: virtual public OutputStream, virtual public Seekable
-    {
     };
 
     class IOStream: virtual public InputStream, virtual public OutputStream
     {
     };
 
-    class SeekableIOStream: public IOStream, public SeekableInputStream, public SeekableOutputStream
-    {
-    };
-
-    class ArrayIOStream: public Array<uint8_t>, public SeekableIOStream
+    class ArrayIOStream: public Array<uint8_t>, public IOStream
     {
         protected:
             size_t index, size;
@@ -368,6 +299,19 @@ namespace li
             {
                 load( data, length );
             }
+
+            virtual bool finite() override { return true; }
+            virtual bool seekable() override { return true; }
+
+            virtual void flush() override {}
+            virtual const char* getErrorDesc() override { return nullptr; }
+
+            virtual FilePos getPos() override { return index; }
+            virtual bool setPos( FilePos pos ) override { index = ( size_t ) pos; return true; }
+            virtual FileSize getSize() override { return size; }
+            FileSize getSize() const { return size; }
+
+            virtual bool eof() override { return index >= size; }
 
             void clear( bool lazy = false )
             {
@@ -417,37 +361,12 @@ namespace li
                 index += sizeof( T );
             }
 
-            virtual uint64_t getPos()
-            {
-                return index;
-            }
-
-            virtual uint64_t getSize()
-            {
-                return size;
-            }
-
-            virtual uint64_t getSize() const
-            {
-                return size;
-            }
-
             void growBuffer( size_t amount )
             {
                 resize( size + amount, true );
             }
 
-            virtual bool isReadable()
-            {
-                return index < size;
-            }
-
-            virtual bool isWritable()
-            {
-                return true;
-            }
-
-            virtual size_t read( void* out, size_t length )
+            virtual size_t read( void* out, size_t length ) override
             {
                 if ( index >= size )
                     return 0;
@@ -470,18 +389,12 @@ namespace li
                 return obj;
             }
 
-            virtual bool setPos( uint64_t pos )
-            {
-                index = ( size_t ) pos;
-                return true;
-            }
-
             void setSize( size_t size )
             {
                 this->size = size;
             }
 
-            virtual size_t write( const void* input, size_t length )
+            virtual size_t write( const void* input, size_t length ) override
             {
                 if ( index + length > size )
                 {
@@ -513,43 +426,44 @@ namespace li
             }
     };
 
-    class SeekableInputStreamSegment : public SeekableInputStream
+    class InputStreamSegment : public InputStream
     {
-        std::shared_ptr<SeekableInputStream> stream;
-        uint64_t pos, segmentOffset, segmentLength;
+        std::shared_ptr<InputStream> stream;
+        FilePos pos, segmentOffset;
+        FileSize segmentLength;
 
         private:
-            SeekableInputStreamSegment(const SeekableInputStreamSegment&);
+            InputStreamSegment(const InputStreamSegment&);
 
         public:
-            SeekableInputStreamSegment( std::shared_ptr<SeekableInputStream> stream, uint64_t offset, uint64_t length )
+            InputStreamSegment( std::shared_ptr<InputStream> stream, FilePos offset, FileSize length )
                     : stream( stream ), pos( 0 ), segmentOffset( offset ), segmentLength( length )
             {
                 stream->setPos( segmentOffset );
             }
 
-            virtual uint64_t getPos() override
+            virtual bool eof() override
+            {
+                return pos >= segmentLength;
+            }
+
+            virtual FilePos getPos() override
             {
                 return pos;
             }
 
-            virtual uint64_t getSize() override
+            virtual FileSize getSize() override
             {
                 return segmentLength;
             }
 
-            virtual bool setPos( uint64_t pos ) override
+            virtual bool setPos( FilePos pos ) override
             {
                 if ( pos > segmentLength )
                     pos = segmentLength;
 
                 this->pos = pos;
                 return stream->setPos( segmentOffset + pos );
-            }
-
-            virtual bool isReadable() override
-            {
-                return pos < segmentLength;
             }
 
             virtual size_t read( void* out, size_t length ) override
@@ -568,82 +482,82 @@ namespace li
 #ifdef li_little_endian
     template<> inline bool InputStream::readLE<uint8_t>(uint8_t* value)
     {
-        return readItems(value, 1) == 1;
+        return read(value, sizeof(*value)) == sizeof(*value);
     }
     
     template<> inline bool InputStream::readLE<uint16_t>(uint16_t* value)
     {
-        return readItems(value, 1) == 1;
+        return read(value, sizeof(*value)) == sizeof(*value);
     }
 
     template<> inline bool InputStream::readLE<uint32_t>(uint32_t* value)
     {
-        return readItems(value, 1) == 1;
+        return read(value, sizeof(*value)) == sizeof(*value);
     }
 
     template<> inline bool InputStream::readLE<uint64_t>(uint64_t* value)
     {
-        return readItems(value, 1) == 1;
+        return read(value, sizeof(*value)) == sizeof(*value);
     }
 
     template<> inline bool InputStream::readLE<int8_t>(int8_t* value)
     {
-        return readItems(value, 1) == 1;
+        return read(value, sizeof(*value)) == sizeof(*value);
     }
 
     template<> inline bool InputStream::readLE<int16_t>(int16_t* value)
     {
-        return readItems(value, 1) == 1;
+        return read(value, sizeof(*value)) == sizeof(*value);
     }
 
     template<> inline bool InputStream::readLE<int32_t>(int32_t* value)
     {
-        return readItems(value, 1) == 1;
+        return read(value, sizeof(*value)) == sizeof(*value);
     }
 
     template<> inline bool InputStream::readLE<int64_t>(int64_t* value)
     {
-        return readItems(value, 1) == 1;
+        return read(value, sizeof(*value)) == sizeof(*value);
     }
 
     template<> inline bool OutputStream::writeLE<uint8_t>(uint8_t value)
     {
-        return writeItems(&value, 1) == 1;
+        return write(&value, sizeof(value)) == sizeof(value);
     }
 
     template<> inline bool OutputStream::writeLE<uint16_t>(uint16_t value)
     {
-        return writeItems(&value, 1) == 1;
+        return write(&value, sizeof(value)) == sizeof(value);
     }
 
     template<> inline bool OutputStream::writeLE<uint32_t>(uint32_t value)
     {
-        return writeItems(&value, 1) == 1;
+        return write(&value, sizeof(value)) == sizeof(value);
     }
 
     template<> inline bool OutputStream::writeLE<uint64_t>(uint64_t value)
     {
-        return writeItems(&value, 1) == 1;
+        return write(&value, sizeof(value)) == sizeof(value);
     }
 
     template<> inline bool OutputStream::writeLE<int8_t>(int8_t value)
     {
-        return writeItems(&value, 1) == 1;
+        return write(&value, sizeof(value)) == sizeof(value);
     }
 
     template<> inline bool OutputStream::writeLE<int16_t>(int16_t value)
     {
-        return writeItems(&value, 1) == 1;
+        return write(&value, sizeof(value)) == sizeof(value);
     }
 
     template<> inline bool OutputStream::writeLE<int32_t>(int32_t value)
     {
-        return writeItems(&value, 1) == 1;
+        return write(&value, sizeof(value)) == sizeof(value);
     }
 
     template<> inline bool OutputStream::writeLE<int64_t>(int64_t value)
     {
-        return writeItems(&value, 1) == 1;
+        return write(&value, sizeof(value)) == sizeof(value);
     }
 #endif
 }

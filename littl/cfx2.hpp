@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2011, 2013 Xeatheran Minexew
+    Copyright (c) 2011, 2013, 2014 Xeatheran Minexew
 
     This software is provided 'as-is', without any express or implied
     warranty. In no event will the authors be held liable for any damages
@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <littl/BaseIO.hpp>
 #include <littl/List.hpp>
+#include <littl/Stream.hpp>
 #include <littl/String.hpp>
 
 #include <confix2.h>
@@ -257,7 +257,7 @@ namespace cfx2
                 return (lastError == cfx2_ok);
             }
 
-            bool loadFrom( li::SeekableInputStream* input )
+            bool loadFrom( li::InputStream* input )
             {
                 cfx2_release_node( &node );
 

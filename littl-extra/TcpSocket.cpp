@@ -79,8 +79,16 @@ namespace li
 
             virtual size_t readUnbuffered( void* buffer, size_t maxlen ) override;
 
-            virtual bool isReadable() override;
-            virtual bool isWritable() override;
+            virtual bool finite() override { return false; }
+            virtual bool seekable() override { return false; }
+
+            virtual void flush() override {}
+
+            virtual FilePos getPos() override { return 0; }
+            virtual FileSize getSize() override { return 0; }
+            virtual bool setPos( FilePos pos ) override { return false; }
+
+            virtual bool eof() override { return false; }
 
             virtual size_t read( void* out, size_t length ) override;
             virtual size_t write( const void* in, size_t length ) override;
@@ -292,7 +300,7 @@ namespace li
         return inet_ntoa( peer.sin_addr );
     }
 
-    bool TcpSocketImpl::isReadable()
+    /*bool TcpSocketImpl::isReadable()
     {
         if ( state != host && state != connected )
             return false;
@@ -306,9 +314,9 @@ namespace li
         FD_SET( sock, &socketSet );
 
         return select( 0, &socketSet, 0, 0, &zeroTime ) == 1;
-    }
+    }*/
 
-    bool TcpSocketImpl::isWritable()
+    /*bool TcpSocketImpl::isWritable()
     {
         if ( state != host && state != connected )
             return false;
@@ -336,7 +344,7 @@ namespace li
             return false;
 
         return true;
-    }
+    }*/
 
     bool TcpSocketImpl::listen( uint16_t port )
     {

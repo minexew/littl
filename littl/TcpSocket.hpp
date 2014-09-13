@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <littl/BaseIO.hpp>
+#include <littl/Stream.hpp>
 
 namespace li
 {
@@ -41,7 +41,6 @@ namespace li
             static std::unique_ptr<TcpSocket> create( bool blocking = false );
             virtual ~TcpSocket() {}
 
-            virtual const char* getErrorDesc() = 0;
             virtual const char* getPeerIP() = 0;
             virtual State getState() = 0;
 

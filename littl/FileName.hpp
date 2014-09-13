@@ -23,7 +23,6 @@
 
 #pragma once
 
-#include <littl/BaseIO.hpp>
 #include <littl/String.hpp>
 
 namespace li

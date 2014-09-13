@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2008-2013 Xeatheran Minexew
+    Copyright (c) 2008-2014 Xeatheran Minexew
 
     This software is provided 'as-is', without any express or implied
     warranty. In no event will the authors be held liable for any damages
@@ -23,9 +23,9 @@
 
 #pragma once
 
-#include <littl/BaseIO.hpp>
 #include <littl/Exception.hpp>
 #include <littl/FileName.hpp>
+#include <littl/Stream.hpp>
 #include <littl/String.hpp>
 
 #ifndef __li_MSW
@@ -56,7 +56,7 @@ namespace li
     }
 #endif
 
-    class File: public SeekableIOStream
+    class File: public IOStream
     {
         private:
             enum LastAccess { Access_none, Access_read, Access_write };
@@ -125,37 +125,27 @@ namespace li
                     return nullptr;
             }
 
-            static bool copy( const char* from, const char* to )
+            operator bool() const
             {
-                File source( from );
-                File dest( to, true );
-
-                if ( !source.isReadable() || !dest.isWritable() )
-                    return false;
-
-                return dest.copyFrom( &source ) == source.getSize();
+                return handle != 0;
             }
 
-            static String formatFileName( const char* fileName )
+            // *** Stream methods ***
+
+            virtual bool finite() override { return true; }
+            virtual bool seekable() override { return true; }
+
+            virtual void flush() override
             {
-                /*size_t length = strlen( fileName );
-
-                for ( size_t i = 0; i < length; )
-                {
-                    Unicode::Char c;
-
-                    i += Utf8::decode( c, fileName + i, length - i );
-
-                    if ( c == ' ' || c == '/' || c == ',' )
-                        return ( String ) "`" + fileName + "`";
-                }
-
-                return fileName;*/
-
-                return ( String ) "`" + fileName + "`";
+                fflush( handle );
             }
 
-            virtual uint64_t getPos()
+            virtual const char* getErrorDesc() override
+            {
+                return ferror( handle ) ? strerror( errno ) : nullptr;
+            }
+
+            virtual uint64_t getPos() override
             {
                 if ( handle )
                     return ftell( handle );
@@ -163,7 +153,7 @@ namespace li
                     return 0;
             }
 
-            virtual uint64_t getSize()
+            virtual uint64_t getSize() override
             {
                 if ( !handle )
                     return 0;
@@ -186,32 +176,7 @@ namespace li
                 return size;
             }
 
-            operator bool() const
-            {
-                return handle != 0;
-            }
-
-            virtual bool isReadable()
-            {
-                return handle && !feof( handle );
-            }
-
-            virtual bool isWritable()
-            {
-                return handle != 0;
-            }
-
-            virtual size_t read( void* out, size_t readSize ) override
-            {
-                if ( lastAccess == Access_write )
-                    fflush( handle );
-
-                lastAccess = Access_read;
-
-                return fread( out, 1, readSize, handle );
-            }
-
-            virtual bool setPos( uint64_t pos )
+            virtual bool setPos( uint64_t pos ) override
             {
                 if ( handle )
                 {
@@ -226,6 +191,25 @@ namespace li
                     return false;
             }
 
+            // *** InputStream methods ***
+
+            virtual bool eof() override
+            {
+                return !handle || feof( handle );
+            }
+
+            virtual size_t read( void* out, size_t readSize ) override
+            {
+                if ( lastAccess == Access_write )
+                    fflush( handle );
+
+                lastAccess = Access_read;
+
+                return fread( out, 1, readSize, handle );
+            }
+
+            // *** OutputStream methods ***
+
             virtual size_t write( const void* in, size_t writeSize ) override
             {
                 if ( lastAccess == Access_read )
@@ -234,6 +218,38 @@ namespace li
                 lastAccess = Access_write;
 
                 return fwrite( in, 1, writeSize, handle );
+            }
+
+            // *** static methods ***
+
+            static bool copy( const char* from, const char* to )
+            {
+                File source( from );
+                File dest( to, true );
+
+                if ( !source || !dest )
+                    return false;
+
+                return dest.copyFrom( &source ) == source.getSize();
+            }
+
+            static String formatFileName( const char* fileName )
+            {
+                /*size_t length = strlen( fileName );
+
+                for ( size_t i = 0; i < length; )
+                {
+                    Unicode::Char c;
+
+                    i += Utf8::decode( c, fileName + i, length - i );
+
+                    if ( c == ' ' || c == '/' || c == ',' )
+                        return ( String ) "`" + fileName + "`";
+                }
+
+                return fileName;*/
+
+                return ( String ) "`" + fileName + "`";
             }
 
             static bool moveFile( const char* fileName, const char* newFileName )

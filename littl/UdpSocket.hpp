@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <littl/BaseIO.hpp>
+#include <littl/Stream.hpp>
 
 namespace li
 {
