@@ -249,11 +249,6 @@ namespace li
 #undef li_member_
 
 #undef li_this
-
-    template<typename T, typename TCapacity = size_t, class IAllocator = Allocator<T>, int options = 0>
-    class UncheckedArray : public Array<T, TCapacity, IAllocator, options | ArrayOptions::noBoundsChecking>
-    {
-    };
 }
 
 #pragma warning ( pop )
