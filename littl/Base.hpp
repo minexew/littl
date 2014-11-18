@@ -66,7 +66,9 @@
 // TODO: Why are we setting this?
 #define WINVER 0x0501
 #endif
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #include <windows.h>
 
 #define __li_MSW
