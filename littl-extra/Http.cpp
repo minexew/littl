@@ -186,7 +186,7 @@ namespace li
                     List<String> tokens;
                     responseLine.parse( tokens, ' ' );
 
-                    dataLength = ( unsigned ) tokens[1];
+                    dataLength = tokens[1].toUnsigned();
                 }
                 else if ( responseLine.equals( "Connection: close", false ) )
                     close = true;

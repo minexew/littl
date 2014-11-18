@@ -279,11 +279,6 @@ namespace li
             uint64_t toUnsigned( Base base = undefined ) const { return parseUnsigned( data, base ); }
             static uint64_t parseUnsigned( const char* text, Base base = undefined );
 
-            operator bool () const
-            {
-                return !isEmpty();
-            }
-
             operator const char* () const
             {
                 return data;
