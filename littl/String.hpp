@@ -31,9 +31,15 @@
 
 #if !defined( __GNUC__ )
 #define strtof( a_, b_ ) ( ( float ) strtod( a_, b_ ) )
+#ifndef PRIi64
 #define PRIi64 "I64i"
+#endif
+#ifndef PRIuPTR
 #define PRIuPTR "Iu"
+#endif
+#ifndef PRIu64
 #define PRIu64 "I64u"
+#endif
 #endif
 
 namespace li
