@@ -22,41 +22,66 @@
 
 #pragma once
 
-#if defined(littl_dummy_Thread)
-#include "ThreadDummy.hpp"
-#elif defined(li_MSW)
-#include "ThreadWin32.hpp"
-#else
-#include "ThreadPosix.hpp"
-#endif
-
 namespace li
 {
-    class CriticalSection
+    class Mutex
     {
-        Mutex* mutex;
-
         public:
-            CriticalSection( Mutex* mutex ) : mutex( mutex )
+            Mutex()
             {
-                mutex->enter();
             }
 
-            CriticalSection( Mutex& mutex ) : mutex( &mutex )
+            ~Mutex()
             {
-                mutex.enter();
             }
 
-            ~CriticalSection()
+            void enter()
             {
-                if ( mutex != nullptr )
-                    mutex->leave();
             }
 
             void leave()
             {
-                mutex->leave();
-                mutex = nullptr;
             }
     };
+
+    class ConditionVar
+    {
+        public:
+            ConditionVar()
+            {
+            }
+
+            ~ConditionVar()
+            {
+            }
+
+            void set()
+            {
+            }
+
+            bool waitFor()
+            {
+                return true;
+            }
+    };
+
+    inline bool interlockedCompareExchange(volatile int32_t* value_ptr, int32_t compareTo, int32_t newValue)
+    {
+        auto ret = *value_ptr;
+
+        if (*value_ptr == compareTo)
+            *value_ptr = newValue;
+
+        return ret;
+    }
+
+    inline int32_t interlockedDecrement(volatile int32_t* a_ptr)
+    {
+        return --(*a_ptr);
+    }
+
+    inline int32_t interlockedIncrement(volatile int32_t* a_ptr)
+    {
+        return ++(*a_ptr);
+    }
 }
