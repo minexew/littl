@@ -47,12 +47,14 @@ namespace li
                 char fullPath[4096];
 
                 return _fullpath( fullPath, path, lengthof( fullPath ) );
-#else
-		char* realPath = realpath( path, nullptr );
+#elif !defined(_3DS)
+                char* realPath = realpath( path, nullptr );
                 String absolutePath( realPath );
 
                 free( realPath );
                 return absolutePath;
+#else
+                return path;
 #endif
             }
 

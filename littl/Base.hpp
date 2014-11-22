@@ -56,6 +56,7 @@
 #include <ctime>
 #include <stdint.h>
 #include <typeinfo>
+#include <utility>
 
 #define li_little_endian
 
@@ -86,6 +87,10 @@
 #define __li_POSIX
 #define li_newLine "\n"
 #define li_stricmp strcasecmp
+#endif
+
+#ifdef _3DS
+#include <3ds.h>
 #endif
 
 // Clang has this
@@ -187,6 +192,8 @@ namespace li
     {
 #ifdef li_MSW
         Sleep( milliSeconds );
+#elif defined(_3DS)
+        svcSleepThread(milliSeconds * 1000000L);
 #else
         usleep( milliSeconds * 1000 );
 #endif

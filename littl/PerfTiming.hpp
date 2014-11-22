@@ -26,7 +26,11 @@
 #include <littl/Base.hpp>
 
 #ifndef li_MSW
+#ifdef _3DS
+#include <3ds.h>
+#else
 #include <sys/time.h>
+#endif
 #endif
 
 namespace li
@@ -79,18 +83,26 @@ namespace li
 
             Counter getCurrentMicros()
             {
+#ifndef _3DS
                 struct timeval tv;
                 gettimeofday( &tv, nullptr );
 
                 return tv.tv_sec * 1000000 + tv.tv_usec;
+#else
+                return osGetTime() * 1000;
+#endif
             }
 
             Counter getCurrentMillis()
             {
+#ifndef _3DS
                 struct timeval tv;
                 gettimeofday( &tv, nullptr );
 
                 return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+#else
+                return osGetTime();
+#endif
             }
 
             static void tinySleepIfPossible()
