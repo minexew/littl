@@ -23,7 +23,6 @@
 
 #pragma once
 
-#include <littl/Exception.hpp>
 #include <littl/FileName.hpp>
 #include <littl/Stream.hpp>
 #include <littl/String.hpp>
