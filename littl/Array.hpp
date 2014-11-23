@@ -48,6 +48,8 @@ namespace li
     template<typename T, typename TCapacity = size_t, class IAllocator = Allocator<T>, int options = 0>
     class Array
     {
+        enum { initialResize = 4 };
+
         T* data;
         TCapacity capacity;
 
@@ -217,6 +219,9 @@ namespace li
     {
         if ( !lazy || newCapacity > capacity )
         {
+            if ( newCapacity < initialResize )
+                newCapacity = initialResize;
+
             // Release when shrinking (newCapacity < capacity)
             // If data == 0, then capacity == 0 so this is safe.
             for ( TCapacity i = newCapacity; i < capacity; i++ )
