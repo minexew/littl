@@ -27,7 +27,7 @@
 #elif defined(li_MSW)
 #include "ThreadWin32.hpp"
 #else
-#include "ThreadPosix.hpp"
+#include "ThreadPthread.hpp"
 #endif
 
 namespace li

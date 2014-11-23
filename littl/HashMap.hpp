@@ -30,7 +30,7 @@ namespace li
 {
 #define li_this HashMap<Key, Value, Hash, getHash, Size>
 
-    template<typename Key, typename Value, typename Hash = uint32_t, Hash ( *getHash )( const Key& ) = Key::getHash, typename Size = uint32_t>
+    template<typename Key, typename Value, typename Hash = size_t, Hash ( *getHash )( const Key& ) = Key::getHash, typename Size = uint32_t>
     class HashMap
     {
         protected:
