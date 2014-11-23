@@ -52,6 +52,7 @@ namespace cfx2
                     //void operator --() { i--; }
 
                     bool operator != (const generic_iterator<Node>& other) const { return node != other.node || i != other.i; }
+                    generic_iterator<Node>& operator =(const generic_iterator<Node>& other) = delete;
 
                     size_t getIndex() const { return i; }
                     bool isValid() const { return i >= 0 && (size_t)i < node.getNumChildren(); }
