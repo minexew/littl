@@ -87,6 +87,28 @@ namespace li
                     bool isValid() const { return i >= 0 && ( size_t ) i < list.getLength(); }
             };
 
+            template <typename TT, typename This>
+            class generic_iterator
+            {
+                This& list;
+                intptr_t i;
+
+                public:
+                    generic_iterator(This& list, intptr_t i) : list(list), i(i) {}
+
+                    TT* operator -> () { return list.getPtrUnsafe( i ); }
+                    TT& operator * () { return list.getUnsafe( i ); }
+                    void operator ++() { i++; }
+
+                    bool operator != (const generic_iterator<TT, This>& other) const { return &list != &other.list || i != other.i; }
+
+                    size_t getIndex() const { return i; }
+                    bool isValid() const { return i >= 0 && (size_t)i < list.getLength(); }
+            };
+
+            typedef generic_iterator<const T, const li_this> const_iterator;
+            typedef generic_iterator<T, li_this> iterator;
+
         public:
             List( TLength initialCapacity = 0 )
                 : li_base( initialCapacity ), length( 0 )
@@ -296,27 +318,48 @@ namespace li
                 this->length = length;
             }
 
-    	    li_this& operator = ( const li_this& other )
-    	    {
+            li_this& operator = ( const li_this& other )
+            {
                 // TODO: Do this more efficiently
 
-    	        clear();
+                clear();
 
-    	        for ( unsigned i = 0; i < other.getLength(); i++ )
-    	            add( other[i] );
+                for ( unsigned i = 0; i < other.getLength(); i++ )
+                    add( other[i] );
 
                 return *this;
-    	    }
+            }
 
             li_this& operator = ( li_this&& other )
-    	    {
+            {
                 li_base::operator = ( ( li_base&& ) other );
 
                 length = other.length;
                 other.length = 0;
 
                 return *this;
-    	    }
+            }
+
+            // iterators
+            const const_iterator begin() const
+            {
+                return const_iterator( *this, 0 );
+            }
+
+            const const_iterator end() const
+            {
+                return const_iterator( *this, getLength() );
+            }
+
+            const iterator begin()
+            {
+                return iterator( *this, 0 );
+            }
+
+            const iterator end()
+            {
+                return iterator( *this, getLength() );
+            }
     };
 
 #undef li_base

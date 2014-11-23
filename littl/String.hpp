@@ -207,9 +207,9 @@ namespace li
             Unicode::Char getChar( size_t& index ) const;
             StringTpl<blockSize> getFiltered( int (* filter)( int c ) ) const;
 
-            static uint32_t getHash( const char* string );
-            static uint32_t getHash( const StringTpl& string ) { return getHash( string.c_str() ); }
-            uint32_t getHash() const { return getHash( *this ); }
+            static size_t getHash( const char* string );
+            static size_t getHash( const StringTpl& string ) { return getHash( string.c_str() ); }
+            size_t getHash() const { return getHash( *this ); }
 
             size_t getNumBytes() const
             {
@@ -766,9 +766,9 @@ namespace li
             return Unicode::invalidChar;
     }
 
-    __li_member( uint32_t ) getHash( const char* string )
+    __li_member( size_t ) getHash( const char* string )
     {
-        uint32_t hash = 0xE424AA76;
+        size_t hash = 0xE424AA76;
 
         if ( string == nullptr )
             return hash;
