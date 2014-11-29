@@ -31,7 +31,21 @@ namespace li
     class ByteIOStream : public IOStream
     {
         public:
-            ByteIOStream(bleb::ByteIO* bio = nullptr) : bio(bio) { pos = 0; }
+            ByteIOStream(bleb::ByteIO* bio = nullptr, bool delete_ = false) : bio(bio), delete_(delete_) { pos = 0; }
+
+            static std::unique_ptr<ByteIOStream> createFrom(bleb::ByteIO* bio, bool delete_)
+            {
+                if (bio)
+                    return std::unique_ptr<ByteIOStream>(new ByteIOStream(bio, delete_));
+                else
+                    return nullptr;
+            }
+
+            ~ByteIOStream()
+            {
+                if (delete_)
+                    delete bio;
+            }
 
             void set(bleb::ByteIO* bio) { this->bio = bio; }
 
@@ -65,5 +79,6 @@ namespace li
         private:
             bleb::ByteIO* bio;
             uint64_t pos;
+            bool delete_;
 };
 }
