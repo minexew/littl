@@ -46,7 +46,9 @@ namespace li
                 // FIXME: Use Unicode
                 char fullPath[4096];
 
-                return _fullpath( fullPath, path, lengthof( fullPath ) );
+                GetFullPathNameA( path, sizeof( fullPath ), fullPath, NULL );
+
+                return String( fullPath );
 #elif !defined(_3DS)
                 char* realPath = realpath( path, nullptr );
                 String absolutePath( realPath );

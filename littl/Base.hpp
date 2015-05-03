@@ -50,6 +50,7 @@
 #include <unistd.h>
 #endif
 
+#include <cctype>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -75,7 +76,6 @@
 #define __li_MSW
 #define li_MSW
 #define li_newLine "\r\n"
-#define li_stricmp _stricmp
 #else
 // all POSIX (Linux, OS X)
 #include <unistd.h>
@@ -86,7 +86,6 @@
 
 #define __li_POSIX
 #define li_newLine "\n"
-#define li_stricmp strcasecmp
 #endif
 
 #ifdef _3DS
@@ -210,11 +209,13 @@ namespace li
 
     inline int stringCaseCompare( const char* a, const char* b )
     {
-#ifdef li_stricmp
-        return li_stricmp( a, b );
-#else
-#error "littl: No case-inpendent string compare (stricmp/strcasecmp) function available"
-#endif
+        // http://stackoverflow.com/a/5820991/2524350
+
+        for (;; a++, b++) {
+            int d = tolower(*a) - tolower(*b);
+            if (d != 0 || !*a)
+                return d;
+        }
     }
 
     inline void throwException(const char* functionName, const char* name, const char* description);
