@@ -20,7 +20,7 @@
 #include "Stack.hpp"
 
 //* depends on: String
-#include "BaseIO.hpp"
+#include "Stream.hpp"
 #include "StreamBuffer.hpp"
 
 //* depends on: BaseIO

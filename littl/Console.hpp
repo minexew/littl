@@ -23,37 +23,37 @@
 
 #pragma once
 
-#include <littl/BaseIO.hpp>
+#include <littl/Stream.hpp>
 
 namespace li
 {
     class Console: public IOStream
     {
-        li_ReferencedClass_override( Console )
-
         public:
             ~Console()
             {
             }
 
-            virtual bool isReadable()
+            virtual bool finite() override { return false; }
+            virtual bool seekable() override { return false; }
+
+            virtual void flush() override {}
+            virtual const char* getErrorDesc() override { return nullptr; }
+
+            virtual FilePos getPos() override { return 0; }
+            virtual bool setPos( FilePos pos ) override { return false; }
+            virtual FileSize getSize() override { return 0; }
+
+            virtual bool eof() override { return false; }
+
+            virtual size_t read( void* out, size_t length ) override
             {
-                return true;
+                return fread( out, 1, length, stdin );
             }
 
-            virtual bool isWritable()
+            virtual size_t write( const void* input, size_t length ) override
             {
-                return true;
-            }
-
-            virtual size_t rawRead( void* out, size_t readSize )
-            {
-                return fread( out, 1, readSize, stdin );
-            }
-
-    		virtual size_t rawWrite( const void* in, size_t writeSize )
-            {
-                return fwrite( in, 1, writeSize, stdout );
+                return fwrite( input, 1, length, stdout );
             }
 
             /*virtual size_t read( void* output, size_t length )
@@ -64,11 +64,6 @@ namespace li
             static String readLine()
             {
                 return Console().InputStream::readLine();
-            }
-
-            virtual size_t write( const void* input, size_t length )
-            {
-                return fwrite( input, 1, length, stdout );
             }
 
             static void write( const char* text )

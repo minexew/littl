@@ -72,13 +72,13 @@ namespace li
 
                 while ( pos < length )
                 {
-                    Utf8Char nextChar;
+                    UnicodeChar nextChar;
                     unsigned numRead = Utf8::decode( nextChar, ( char* )Array<T>::getPtr( pos ), length - pos );
 
                     pos += numRead;
 
                     if ( numRead > 0 && nextChar )
-                        result += Utf8Character( nextChar );
+                        result += UnicodeChar( nextChar );
                     else
                         break;
                 }
