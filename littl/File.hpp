@@ -131,6 +131,13 @@ namespace li
                 return handle != 0;
             }
 
+            FILE* release()
+            {
+                FILE* handle = this->handle;
+                this->handle = nullptr;
+                return handle;
+            }
+
             // *** Stream methods ***
 
             virtual bool finite() override { return true; }
