@@ -30,7 +30,6 @@
 #include <cstring>
 
 #if !defined( __GNUC__ )
-#define strtof( a_, b_ ) ( ( float ) strtod( a_, b_ ) )
 #ifndef PRIi64
 #define PRIi64 "I64i"
 #endif
