@@ -25,6 +25,7 @@
 #include <littl/List.hpp>
 #include <littl/Utf8.hpp>
 
+#include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
