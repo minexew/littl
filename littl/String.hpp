@@ -29,7 +29,7 @@
 #include <cstdlib>
 #include <cstring>
 
-#if !defined( __GNUC__ )
+#if !defined( __GNUC__ ) && !( _MSC_VER >= 1800 )
 #define strtof( a_, b_ ) ( ( float ) strtod( a_, b_ ) )
 #define PRIuPTR "Iu"
 #define PRIu64 "I64u"

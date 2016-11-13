@@ -39,7 +39,6 @@
 // basic platform-related stuff
 #if ( defined( __WINDOWS__ ) || defined( _WIN32 ) || defined( _WIN64 ) )
 // MS Windows
-#define WINVER 0x0501
 #include <windows.h>
 
 #define __li_MSW
