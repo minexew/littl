@@ -7,12 +7,11 @@ set(library ${PROJECT_NAME})
 # Also add headers so that they're included in generated projects
 file(GLOB sources
     ${PROJECT_SOURCE_DIR}/littl-extra/*.cpp
-    ${PROJECT_SOURCE_DIR}/src/bleb/*.hpp
 
     ${PROJECT_SOURCE_DIR}/littl/*.hpp
 )
 
-add_library(${library} ${sources})
+add_library(${library} STATIC ${sources})
 
 target_include_directories(${library} PUBLIC ${PROJECT_SOURCE_DIR})
 
