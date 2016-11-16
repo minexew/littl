@@ -24,7 +24,10 @@
 
 #include <littl/Base.hpp>
 
-#ifndef li_MSW
+#ifdef li_MSW
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#else
 #include <dlfcn.h>
 #endif
 

@@ -29,10 +29,39 @@
 #include <ctime>
 #include <memory>
 
+#ifdef li_MSW
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
+
+#ifdef _3DS
+#include <3ds.h>
+#endif
+
 namespace li
 {
     typedef uint64_t FilePos;
     typedef uint64_t FileSize;
+
+    inline void pauseThread(unsigned milliSeconds)
+    {
+#ifdef li_MSW
+        Sleep(milliSeconds);
+#elif defined(_3DS)
+        svcSleepThread(milliSeconds * 1000000L);
+#else
+        usleep(milliSeconds * 1000);
+#endif
+    }
+
+    inline unsigned relativeTime()
+    {
+#ifdef li_MSW
+        return GetTickCount();
+#else
+        return clock() * 1000 / CLOCKS_PER_SEC;
+#endif
+    }
 
     struct Timeout
     {

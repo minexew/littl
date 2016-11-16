@@ -64,14 +64,9 @@
 // basic platform-related stuff
 #if ( defined( __WINDOWS__ ) || defined( _WIN32 ) || defined( _WIN64 ) )
 // MS Windows
-#ifndef WINVER
-// TODO: Why are we setting this?
-#define WINVER 0x0501
-#endif
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
-#include <windows.h>
 
 #define __li_MSW
 #define li_MSW
@@ -86,10 +81,6 @@
 
 #define __li_POSIX
 #define li_newLine "\n"
-#endif
-
-#ifdef _3DS
-#include <3ds.h>
 #endif
 
 // Clang has this
@@ -185,26 +176,6 @@ namespace li
     template<typename Type> inline void destructPointer( Type* p )
     {
         p->~Type();
-    }
-
-    inline void pauseThread( unsigned milliSeconds )
-    {
-#ifdef li_MSW
-        Sleep( milliSeconds );
-#elif defined(_3DS)
-        svcSleepThread(milliSeconds * 1000000L);
-#else
-        usleep( milliSeconds * 1000 );
-#endif
-    }
-
-    inline unsigned relativeTime()
-    {
-#ifdef li_MSW
-        return GetTickCount();
-#else
-        return clock() * 1000 / CLOCKS_PER_SEC;
-#endif
     }
 
     inline int stringCaseCompare( const char* a, const char* b )

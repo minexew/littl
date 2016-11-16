@@ -25,12 +25,13 @@
 
 #include <littl/Base.hpp>
 
-#ifndef li_MSW
-#ifdef _3DS
+#ifdef li_MSW
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#elif defined(_3DS)
 #include <3ds.h>
 #else
 #include <sys/time.h>
-#endif
 #endif
 
 namespace li

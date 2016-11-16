@@ -383,4 +383,6 @@ namespace li
     
 #undef li_member
 #undef li_member_
+
+#undef li_this
 }

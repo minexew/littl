@@ -947,7 +947,7 @@ namespace li
             char* newData = ( char* ) realloc( data, capacity );
 
             // Low on memory? Well, it seems like a good idea to rather freeze for some time instead of crashing.
-            if ( !newData && capacity > 0 )
+            /*if ( !newData && capacity > 0 )
             {
                 printf( "[littl Warning]    OUT OF MEMORY!\n" );
                 printf( "[littl Warning]    Application will wait to allocate %" PRIuPTR " bytes.\n", capacity );
@@ -957,7 +957,7 @@ namespace li
             {
                 newData = ( char* ) realloc( data, capacity );
                 pauseThread( 5 );
-            }
+            }*/
 
             data = newData;
         }

@@ -28,6 +28,7 @@
 #include <littl/String.hpp>
 
 #ifdef li_MSW
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #else
 #include <dirent.h>
