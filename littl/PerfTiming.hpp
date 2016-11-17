@@ -33,6 +33,7 @@
 #include <3ds.h>
 #else
 #include <sys/time.h>
+#include <unistd.h>
 #endif
 
 namespace li

@@ -33,10 +33,10 @@
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#endif
-
-#ifdef _3DS
+#elif defined(_3DS)
 #include <3ds.h>
+#else
+#include <unistd.h>
 #endif
 
 namespace li
