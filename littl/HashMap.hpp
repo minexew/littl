@@ -24,6 +24,7 @@
 
 #include <littl/Allocator.hpp>
 
+#include <cinttypes>
 #include <utility>
 
 namespace li

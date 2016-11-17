@@ -23,24 +23,14 @@
 #pragma once
 
 #include <littl/List.hpp>
+#include <littl/StringCaseCompare.hpp>
 #include <littl/Utf8.hpp>
 
 #include <cstddef>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-
-#if !defined( __GNUC__ )
-#ifndef PRIi64
-#define PRIi64 "I64i"
-#endif
-#ifndef PRIuPTR
-#define PRIuPTR "Iu"
-#endif
-#ifndef PRIu64
-#define PRIu64 "I64u"
-#endif
-#endif
 
 namespace li
 {

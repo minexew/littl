@@ -29,6 +29,21 @@
 
 namespace li
 {
+    template<typename Type> inline void constructPointer(Type* p)
+    {
+        new(static_cast<void*>(p)) Type();
+    }
+
+    template<typename Type, typename Type2> inline void constructPointer(Type* p, Type2 par)
+    {
+        new(static_cast<void*>(p)) Type(std::forward<Type2>(par));
+    }
+
+    template<typename Type> inline void destructPointer(Type* p)
+    {
+        p->~Type();
+    }
+
     template <typename T = uint8_t>
     class Allocator
     {

@@ -28,6 +28,7 @@
 #include <littl/String.hpp>
 
 #ifdef li_MSW
+#define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #else
@@ -154,13 +155,13 @@ namespace li
                 char currDir[4096];
 
                 currDir[0] = 0;
-                GetCurrentDirectoryA(lengthof(currDir), currDir);
+                GetCurrentDirectoryA(li_lengthof(currDir), currDir);
 
                 return String(currDir);
 #else
                 char currDir[4096];
 
-                return String(getcwd(currDir, lengthof(currDir)));
+                return String(getcwd(currDir, li_lengthof(currDir)));
 #endif
             }
 

@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2010, 2011 Xeatheran Minexew
+    Copyright (C) 2016 Xeatheran Minexew
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -22,15 +22,15 @@
 
 #pragma once
 
-#include <littl/Exception.hpp>
-
-#define li_assert( expr_ ) if ( !( expr_ ) ) li::assertionFail( __FILE__, __LINE__, li_functionName, #expr_, String() );
+#include <littl/Base.hpp>
 
 namespace li
 {
-    inline void assertionFail( const String& sourceUnit, int line, const String& functionName, const String& assertion, const String& desc )
+    template<size_t alignment, typename Type>
+    Type align(Type value)
     {
-        String description = sourceUnit + ":" + line + "\n\nFailed assertion `" + assertion + "`";
-        throw Exception( functionName, "AssertionFailed", desc.isEmpty() ? description : description + "\n(" + desc + ")" );
+        static_assert(alignment && !(alignment & (alignment - 1)), "alignment must be power of 2");
+
+        return (value + alignment - 1) & ~(alignment - 1);
     }
 }

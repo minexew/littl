@@ -23,6 +23,8 @@
 
 #include "Common.hpp"
 
+#include <cstdio>
+
 namespace li
 {
 #ifdef __li_MSW
