@@ -171,12 +171,6 @@ namespace li
 
     li_member( const T& ) get( TCapacity field ) const
     {
-        if ( !( options & ArrayOptions::noBoundsChecking ) )
-        {
-            if ( field >= capacity )
-                throwException( "li.Array.get(const)", "IndexOutOfBounds", "Specified index is outside array bounds" );
-        }
-
         return data[field];
     }
 

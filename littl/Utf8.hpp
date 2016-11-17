@@ -24,6 +24,8 @@
 
 #include "Unicode.hpp"
 
+#include <littl/Algorithm.hpp>
+
 /*
   thanks to the HTML Tidy project (http://sourceforge.net/projects/tidy/)
     for the UTF-8 {en,de}coding code

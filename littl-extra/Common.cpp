@@ -24,6 +24,7 @@
 #include "Common.hpp"
 
 #include <cstdio>
+#include <cstring>
 
 namespace li
 {

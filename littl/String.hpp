@@ -26,6 +26,7 @@
 #include <littl/StringCaseCompare.hpp>
 #include <littl/Utf8.hpp>
 
+#include <cinttypes>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
