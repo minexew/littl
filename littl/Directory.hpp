@@ -186,5 +186,15 @@ namespace li
                     return nullptr;
 #endif
             }
+
+            static bool setCurrent(const char* dir)
+            {
+#ifdef li_MSW
+                // FIXME: Use Unicode
+                return SetCurrentDirectoryA(dir) != 0;
+#else
+                return chdir(dir) == 0;
+#endif
+            }
     };
 }
