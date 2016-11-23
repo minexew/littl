@@ -62,9 +62,9 @@ namespace li
 
             Value& get( const Key& key )
             {
-                iterate ( pairs )
-                    if ( pairs.current().key == key )
-                        return pairs.current().value;
+                iterate2 ( pair, pairs )
+                    if ( ( *pair ).key == key )
+                        return ( *pair ).value;
 
                 return empty;
             }
@@ -81,10 +81,10 @@ namespace li
 
             bool set( const Key& key, const Value& value )
             {
-                iterate ( pairs )
-                    if ( pairs.current().key == key )
+                iterate2 ( pair, pairs )
+                    if ( ( *pair ).key == key )
                     {
-                        pairs.current().value = value;
+                        ( *pair ).value = value;
                         return true;
                     }
 
