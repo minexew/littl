@@ -43,3 +43,9 @@
 #ifndef li_lengthof
 #define li_lengthof( array_ ) ( sizeof( array_ ) / sizeof( *( array_ ) ) )
 #endif
+
+namespace li
+{
+    class InputStream;
+    class OutputStream;
+}
