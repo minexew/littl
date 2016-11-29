@@ -1,6 +1,6 @@
 #pragma once
 
-#include <littl/BaseIO.hpp>
+#include <littl/Stream.hpp>
 
 #include <zlib.h>
 
@@ -8,14 +8,13 @@ namespace li
 {
     class GzFileStream: public IOStream
     {
-        li_ReferencedClass_override( GzFileStream )
-
         private:
             gzFile file;
 
-        protected:
-            GzFileStream( gzFile file ) : file( file )
-    		{
+        public:
+            GzFileStream( const char* fileName, const char* mode = "rb" )
+            {
+                this->file = gzopen( fileName, mode );
             }
 
             virtual ~GzFileStream()
@@ -24,30 +23,58 @@ namespace li
                     gzclose( file );
             }
 
-    	public:
-            static GzFileStream* open( const char* fileName, const char* mode = "rb" )
+            operator bool() const
             {
-                gzFile file = gzopen( fileName, mode );
+                return file != 0;
+            }
 
-                if ( file == nullptr )
+            virtual bool finite() override { return true; }
+            virtual bool seekable() override { return false; }
+
+            virtual void flush() override
+            {
+                if ( file )
+                    gzflush( file, Z_SYNC_FLUSH );
+            }
+
+            virtual const char* getErrorDesc() override
+            {
+                if ( !file )
                     return nullptr;
 
-                return new GzFileStream( file );
+                int err;
+                return gzerror( file, &err );
             }
 
-            virtual bool isReadable()
+            virtual uint64_t getPos() override
             {
-                return this && file && !gzeof( file );
+                if ( file )
+                    return gztell64( file );
+                else
+                    return 0;
             }
 
-            virtual bool isWritable()
+            virtual uint64_t getSize() override
             {
-                return this && file;
+                // FIXME
+                return 0;
             }
 
-            virtual size_t rawRead( void* out, size_t readSize )
+            virtual bool setPos( uint64_t pos ) override
             {
-                if ( isReadable() && readSize > 0 )
+                return gzseek64( file, pos, SEEK_SET ) == pos;
+            }
+
+            // *** InputStream methods ***
+
+            virtual bool eof() override
+            {
+                return !file || gzeof( file );
+            }
+
+            virtual size_t read( void* out, size_t readSize ) override
+            {
+                if ( file )
                 {
                     int numRead = gzread( file, out, readSize );
                     return numRead > 0 ? numRead : 0;
@@ -56,16 +83,13 @@ namespace li
                     return 0;
             }
 
-            virtual size_t rawWrite( const void* in, size_t writeSize )
-            {
-                return write( in, writeSize );
-            }
+            // *** OutputStream methods ***
 
-            virtual size_t write( const void* input, size_t length )
+            virtual size_t write( const void* in, size_t writeSize ) override
             {
-                if ( isWritable() && length > 0 )
+                if ( file )
                 {
-                    int numWritten = gzwrite( file, input, length );
+                    int numWritten = gzwrite( file, in, writeSize );
                     return numWritten > 0 ? numWritten : 0;
                 }
                 else
