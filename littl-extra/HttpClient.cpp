@@ -31,21 +31,21 @@ namespace li
 
     HttpClient::~HttpClient()
     {
-        iterate2 ( i, sessions )
-            delete i;
+        for ( auto session : sessions )
+            delete session;
     }
 
     void HttpClient::cancelAllRequests()
     {
-        iterate2 ( i, sessions )
-            i->cancelAllRequests();
+        for ( auto session : sessions )
+            session->cancelAllRequests();
     }
 
     bool HttpClient::isRunning()
     {
-        iterate2 ( i, sessions )
+        for ( auto session : sessions )
         {
-            if ( i->isRunning() )
+            if ( session->isRunning() )
                 return true;
         }
 
@@ -54,10 +54,10 @@ namespace li
 
     HttpSession* HttpClient::getSession( const String& host )
     {
-        iterate2 ( i, sessions )
+        for ( auto session : sessions )
         {
-            if ( i->getHostName() == host )
-                return i;
+            if ( session->getHostName() == host )
+                return session;
         }
 
         HttpSession* session = new HttpSession( host );
@@ -99,9 +99,11 @@ namespace li
 
     bool HttpClient::waitFor( long time )
     {
-        iterate2 ( i, sessions )
-            if ( !i->waitFor( time ) )
+        for ( auto session : sessions )
+        {
+            if ( !session->waitFor( time ) )
                 return false;
+        }
 
         return true;
     }

@@ -56,8 +56,8 @@ namespace li
     {
         enter();
 
-        iterate2 ( i, queue )
-            i->changeStatus( HttpRequest::aborted );
+        for ( auto request : queue )
+            request->changeStatus( HttpRequest::aborted );
 
         queue.clear();
 
