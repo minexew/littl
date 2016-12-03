@@ -321,6 +321,11 @@ namespace li
                 this->length = length;
             }
 
+            TLength size() const
+            {
+                return length;
+            }
+
             li_this& operator = ( const li_this& other )
             {
                 // TODO: Do this more efficiently
