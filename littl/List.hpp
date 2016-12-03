@@ -27,6 +27,8 @@
 
 #include <littl/Array.hpp>
 
+#include <iterator>
+
 #define iterate2( iter_, list_ ) for ( auto iter_ = ( list_ ).getIterator(); iter_.isValid(); ++iter_ )
 #define reverse_iterate2( iter_, list_ ) for ( auto iter_ = ( list_ ).getIterator( true ); iter_.isValid(); --iter_ )
 
@@ -88,7 +90,7 @@ namespace li
             };
 
             template <typename TT, typename This>
-            class generic_iterator
+            class generic_iterator : public std::iterator<std::input_iterator_tag, TT>
             {
                 This& list;
                 intptr_t i;
@@ -100,6 +102,7 @@ namespace li
                     TT& operator * () { return list.getUnsafe( i ); }
                     void operator ++() { i++; }
 
+                    bool operator == (const generic_iterator<TT, This>& other) const { return &list == &other.list && i == other.i; }
                     bool operator != (const generic_iterator<TT, This>& other) const { return &list != &other.list || i != other.i; }
 
                     size_t getIndex() const { return i; }
@@ -210,12 +213,12 @@ namespace li
                 return this->getPtr( length - field );
             }
 
-            Iterator getIterator( bool reverse = false )
+            [[deprecated]] Iterator getIterator( bool reverse = false )
             {
                 return Iterator( *this, reverse ? length - 1 : 0 );
             }
 
-            ConstIterator getIterator() const
+            [[deprecated]] ConstIterator getIterator() const
             {
                 return ConstIterator( *this );
             }
