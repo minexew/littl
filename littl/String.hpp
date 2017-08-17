@@ -324,7 +324,7 @@ namespace li
             {\
                 char buffer[20];\
 \
-                snprintf( buffer, 20, fmt, ( type ) num );\
+                snprintf( buffer, 20, fmt, static_cast<type>( num ) );\
                 append( buffer );\
             }\
 \
@@ -719,7 +719,7 @@ namespace li
 
     __li_member( StringTpl<blockSize> ) formatFloat( float value, int width )
     {
-        StringTpl format = "%" + ( width >= 0 ? ( StringTpl ) width : "" ) + "g";
+        StringTpl format = "%" + ( width >= 0 ? StringTpl( width ) : "" ) + "g";
         StringTpl numBuffer;
 
         numBuffer.setBuffer( std::max( width, 30 ) );
@@ -730,7 +730,7 @@ namespace li
 
     __li_member( StringTpl<blockSize> ) formatInt( int value, int width, Base base )
     {
-        StringTpl format = "%" + ( width >= 0 ? ( StringTpl ) width : "" ) + ( base == decimal ? "i" : "X" );
+        StringTpl format = "%" + ( width >= 0 ? StringTpl( width ) : "" ) + ( base == decimal ? "i" : "X" );
         StringTpl numBuffer;
 
         numBuffer.setBuffer( std::max( width, 30 ) );
@@ -935,20 +935,10 @@ namespace li
         {
             capacity = newCapacity;
 
-            char* newData = ( char* ) realloc( data, capacity );
+            char* newData = reinterpret_cast<char*>( realloc( data, capacity ) );
 
-            // Low on memory? Well, it seems like a good idea to rather freeze for some time instead of crashing.
-            /*if ( !newData && capacity > 0 )
-            {
-                printf( "[littl Warning]    OUT OF MEMORY!\n" );
-                printf( "[littl Warning]    Application will wait to allocate %" PRIuPTR " bytes.\n", capacity );
-            }
-
-            while ( !newData && capacity > 0 )
-            {
-                newData = ( char* ) realloc( data, capacity );
-                pauseThread( 5 );
-            }*/
+            if ( newData == nullptr )
+                abort();
 
             data = newData;
         }
@@ -1082,7 +1072,7 @@ namespace li
 
     template <typename T> String operator + ( T left, const String& right )
     {
-        return ( String ) left + right;
+        return String( left ) + right;
     }
 
     /*template <typename T> String operator == ( T left, const String& right )

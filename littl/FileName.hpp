@@ -75,7 +75,7 @@ namespace li
 
             static String format( const char* fileName )
             {
-                return ( String ) "`" + fileName + "`";
+                return String( "`" ) + fileName + "`";
             }
 
             String getDirectory() const

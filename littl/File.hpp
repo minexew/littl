@@ -257,7 +257,7 @@ namespace li
 
                 return fileName;*/
 
-                return ( String ) "`" + fileName + "`";
+                return String( "`" ) + fileName + "`";
             }
 
             static bool moveFile( const char* fileName, const char* newFileName )

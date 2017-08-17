@@ -199,20 +199,20 @@ namespace li
     {
         if ( c <= 0x7F )
         {
-            buffer[0] = ( char ) c;
+            buffer[0] = static_cast<char>( c );
             buffer[1] = 0;
             return 1;
         }
         else if ( c <= 0x7FF )
         {
-            buffer[0] = 0xC0 | ( char )( c >> 6 );
+            buffer[0] = 0xC0 | ( ( c >> 6 ) & 0x1F );
             buffer[1] = 0x80 | ( c & 0x3F );
             buffer[2] = 0;
             return 2;
         }
         else if ( c <= 0xFFFF )
         {
-            buffer[0] = 0xE0 | ( char )( c >> 12 );
+            buffer[0] = 0xE0 | ( ( c >> 12 ) & 0x0F );
             buffer[1] = 0x80 | ( ( c >> 6 ) & 0x3F);
             buffer[2] = 0x80 | ( c & 0x3F);
             buffer[3] = 0;
@@ -220,7 +220,7 @@ namespace li
         }
         else if ( c <= 0x1FFFFF )
         {
-            buffer[0] = 0xF0 | ( char )( c >> 18 );
+            buffer[0] = 0xF0 | ( ( c >> 18 ) & 0x07 );
             buffer[1] = 0x80 | ( ( c >> 12 ) & 0x3F );
             buffer[2] = 0x80 | ( ( c >> 6 ) & 0x3F );
             buffer[3] = 0x80 | ( c & 0x3F );
@@ -230,7 +230,7 @@ namespace li
         else if ( c <= 0x3FFFFFF )
         {
             buffer[0] = 0xF8 | ( c >> 24 );
-            buffer[1] = 0x80 | ( char )( c >> 18 );
+            buffer[1] = 0x80 | ( ( c >> 18 ) & 0x3F );
             buffer[2] = 0x80 | ( ( c >> 12 ) & 0x3F );
             buffer[3] = 0x80 | ( ( c >> 6 ) & 0x3F );
             buffer[4] = 0x80 | ( c & 0x3F );

@@ -91,7 +91,7 @@ namespace li
     {
         if ( initialCapacity > 0 )
         {
-            data = ( T* )IAllocator::allocate( capacity );
+            data = reinterpret_cast<T*>(IAllocator::allocate( capacity ));
 
             for ( unsigned i = 0; i < capacity; i++ )
                 constructPointer( data + i );

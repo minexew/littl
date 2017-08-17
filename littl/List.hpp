@@ -61,7 +61,7 @@ namespace li
                     void operator --() { i--; }
 
                     size_t getIndex() const { return i; }
-                    bool isValid() const { return i >= 0 && ( size_t ) i < list.getLength(); }
+                    bool isValid() const { return i >= 0 && static_cast<size_t>( i ) < list.getLength(); }
                     void remove() { list.remove(i--); }
 
                     Iterator& operator = ( T&& value )
@@ -86,7 +86,7 @@ namespace li
                     void operator --() { i--; }
 
                     size_t getIndex() const { return i; }
-                    bool isValid() const { return i >= 0 && ( size_t ) i < list.getLength(); }
+                    bool isValid() const { return i >= 0 && static_cast<size_t>( i ) < list.getLength(); }
             };
 
             template <typename TT, typename This>
@@ -106,7 +106,7 @@ namespace li
                     bool operator != (const generic_iterator<TT, This>& other) const { return &list != &other.list || i != other.i; }
 
                     size_t getIndex() const { return i; }
-                    bool isValid() const { return i >= 0 && (size_t)i < list.getLength(); }
+                    bool isValid() const { return i >= 0 && static_cast<size_t>(i) < list.getLength(); }
             };
 
             typedef generic_iterator<const T, const li_this> const_iterator;
@@ -119,7 +119,7 @@ namespace li
             }
 
             List( li_this&& other )
-                : li_base( ( li_base&& ) other ), length( other.length )
+                : li_base( std::move( other ) ), length( other.length )
             {
                 other.length = 0;
             }
@@ -133,7 +133,7 @@ namespace li
             TLength add( T&& item )
             {
                 this->resize( length + 1, true );
-                this->getUnsafe( length ) = ( T&& ) item;
+                this->getUnsafe( length ) = std::move( item );
                 return length++;
             }
 
@@ -340,7 +340,7 @@ namespace li
 
             li_this& operator = ( li_this&& other )
             {
-                li_base::operator = ( ( li_base&& ) other );
+                li_base::operator = ( std::move( other ) );
 
                 length = other.length;
                 other.length = 0;

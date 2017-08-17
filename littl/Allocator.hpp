@@ -51,7 +51,7 @@ namespace li
         public:
             static T* allocate( size_t count )
             {
-                T* pointer = ( T* )malloc( sizeof( T ) * count );
+                T* pointer = reinterpret_cast<T*>(malloc( sizeof( T ) * count ));
                 clear( pointer, count );
                 return pointer;
             }
@@ -81,7 +81,7 @@ namespace li
 
             static T* resize( void* pointer, size_t count )
             {
-                return ( T* )realloc( pointer, sizeof( T ) * count );
+                return reinterpret_cast<T*>(realloc( pointer, sizeof( T ) * count ));
             }
     };
 }

@@ -215,7 +215,7 @@ namespace li
 
             String readWhole()
             {
-                size_t streamSize = ( size_t ) getSize();
+                size_t streamSize = static_cast<size_t>( getSize() );
 
                 char* buffer = new char [streamSize + 1];
                 read( buffer, streamSize );
@@ -321,7 +321,7 @@ namespace li
 
             ArrayIOStream( const String& data ) : index( 0 ), size( data.getNumBytes() )
             {
-                load( ( uint8_t* ) data.c_str(), data.getNumBytes() );
+                load(reinterpret_cast<const uint8_t*>( data.c_str() ), data.getNumBytes() );
             }
 
             ArrayIOStream( uint8_t* data, size_t length )
@@ -337,7 +337,7 @@ namespace li
             virtual const char* getErrorDesc() override { return nullptr; }
 
             virtual FilePos getPos() override { return index; }
-            virtual bool setPos( FilePos pos ) override { index = ( size_t ) pos; return true; }
+            virtual bool setPos( FilePos pos ) override { index = static_cast<size_t>( pos ); return true; }
             virtual FileSize getSize() override { return size; }
             FileSize getSize() const { return size; }
 
@@ -502,7 +502,7 @@ namespace li
                     return 0;
 
                 if ( pos + length >= segmentLength )
-                    length = (size_t)(segmentLength - pos);
+                    length = static_cast<size_t>(segmentLength - pos);
 
                 pos += length;
                 return stream->read( out, length );
