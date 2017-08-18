@@ -28,7 +28,9 @@
 #include <littl/String.hpp>
 
 #ifdef li_MSW
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #else
@@ -126,7 +128,7 @@ namespace li
                     {
                         Entry entry = { findFileData.cFileName,
                                 (findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? true : false,
-                                ( (uint64_t)findFileData.nFileSizeHigh << 32 ) | findFileData.nFileSizeLow
+                                ( uint64_t(findFileData.nFileSizeHigh) << 32 ) | findFileData.nFileSizeLow
                         };
 
                 	    entries.add( entry );

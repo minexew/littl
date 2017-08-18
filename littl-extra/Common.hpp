@@ -26,7 +26,9 @@
 #define _WIN32_WINNT 0x501
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#ifndef __GNUC__
 typedef int ssize_t;
+#endif
 #else
 #include <sys/ioctl.h>
 #include <sys/types.h>

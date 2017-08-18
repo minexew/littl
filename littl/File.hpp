@@ -53,7 +53,7 @@ namespace li
         ull.LowPart = ft.dwLowDateTime;
         ull.HighPart = ft.dwHighDateTime;
 
-        return ( time_t )( ull.QuadPart / 10000000ULL - 11644473600ULL );
+        return static_cast<time_t>( ull.QuadPart / 10000000ULL - 11644473600ULL );
     }
 #endif
 
@@ -296,7 +296,7 @@ namespace li
                 else
                     stat_out->flags |= FileStat::is_file;
 
-                stat_out->sizeInBytes = ( ( uint64_t ) data.nFileSizeHigh << 32 ) | data.nFileSizeLow;
+                stat_out->sizeInBytes = ( uint64_t( data.nFileSizeHigh ) << 32 ) | data.nFileSizeLow;
                 stat_out->creationTime = FileTimeToTime_t( data.ftCreationTime );
                 stat_out->modificationTime = FileTimeToTime_t( data.ftLastWriteTime );
 

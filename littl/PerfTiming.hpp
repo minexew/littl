@@ -26,7 +26,9 @@
 #include <littl/Base.hpp>
 
 #ifdef li_MSW
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #elif defined(_3DS)
