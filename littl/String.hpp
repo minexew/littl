@@ -161,7 +161,7 @@ namespace li
 
             const char* c_str() const
             {
-                return data;
+                return ( data != nullptr ) ? data : "";
             }
 
             void debug() const
