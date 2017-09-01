@@ -63,7 +63,7 @@ namespace li
             enum LastAccess { Access_none, Access_read, Access_write };
 
             FILE* handle;
-            LastAccess lastAccess;
+            LastAccess lastAccess = Access_none;
 
             File( const File& other ) = delete;
 
