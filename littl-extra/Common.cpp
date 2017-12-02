@@ -59,7 +59,7 @@ namespace li
 
         // Try to resolve the address
         if ( getaddrinfo( hostname, ( port >= 0 ) ? portString : nullptr, hints, &results ) != 0 )
-            return false;
+            return NULL;
 
         // Browse the results and try to find a suitable entry
         for ( current = results; current != nullptr; current = current->ai_next )
