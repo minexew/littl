@@ -241,7 +241,7 @@ namespace li
             printf( "  - bucket #%04X (%" PRIuPTR "/%" PRIuPTR " entries)\n", ( uint16_t ) i, ( size_t ) bucket.numEntries, ( size_t ) bucket.capacity );
 
             for ( Size j = 0; j < bucket.numEntries; j++ )
-                printf( "      - entry #%" PRIuPTR " (hash = %08X)\n", ( size_t ) j, bucket.entries[j].hash );
+                printf( "      - entry #%" PRIuPTR " (hash = %08" PRIXPTR ")\n", ( size_t ) j, bucket.entries[j].hash );
         }
     }
 
