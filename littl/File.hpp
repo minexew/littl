@@ -328,7 +328,7 @@ namespace li
                 return File( fileName ).readWhole();
             }
 
-            static int getLines( const char* fileName, List<String>& list )
+            static size_t getLines( const char* fileName, List<String>& list )
             {
                 return File( fileName ).readLines( list );
             }

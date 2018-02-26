@@ -746,7 +746,7 @@ namespace li
         if ( index >= getNumBytes() )
             return Unicode::invalidChar;
 
-        unsigned length = Utf8::decode( result, data + index, getNumBytes() - index );
+        size_t length = Utf8::decode( result, data + index, getNumBytes() - index );
 
         if ( length )
         {
@@ -1088,7 +1088,7 @@ namespace li
     class StringIter
     {
         const String& string;
-        unsigned index;
+        size_t index;
         Unicode::Char next;
 
         void readNext()
@@ -1099,7 +1099,7 @@ namespace li
                 return;
             }
 
-            unsigned got = Utf8::decode( next, string.c_str() + index, string.getNumBytes() - index );
+            size_t got = Utf8::decode( next, string.c_str() + index, string.getNumBytes() - index );
 
             if ( !got || next == Unicode::invalidChar )
                 next = 0;
