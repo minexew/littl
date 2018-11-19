@@ -414,13 +414,13 @@ namespace li
             operator_compare( const char* )
             operator_compare( const StringTpl& )
 
-            /*operator_to_int( short )
+            operator_to_int( short )
             operator_to_int( int )
             operator_to_int( unsigned )
             operator_to_int( unsigned short )
             operator_to_int( long )
             operator_to_num( float )
-            operator_to_num( double )*/
+            operator_to_num( double )
     };
 
 #define __li_member( type ) template <int blockSize> type StringTpl<blockSize>::
