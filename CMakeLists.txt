@@ -17,6 +17,7 @@ file(GLOB sources
 add_library(${library} ${sources})
 
 target_include_directories(${library} PUBLIC ${PROJECT_SOURCE_DIR})
+target_compile_definitions(${library} PUBLIC __STDC_FORMAT_MACROS=1)
 
 if (WIN32)
 	target_compile_definitions(${library} PUBLIC -D_CRT_SECURE_NO_WARNINGS=1)
