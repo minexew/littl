@@ -326,7 +326,7 @@ namespace li
                 load(reinterpret_cast<const uint8_t*>( data.c_str() ), data.getNumBytes() );
             }
 
-            ArrayIOStream( uint8_t* data, size_t length )
+            ArrayIOStream( const uint8_t* data, size_t length )
                     : Array<uint8_t>( length ), index( 0 ), size( length )
             {
                 load( data, length );
