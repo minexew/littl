@@ -359,7 +359,7 @@ namespace li
                 {
                     unsigned j;
 
-                    printf( "[%p]", reinterpret_cast<void*>( i ) );
+                    printf( "[%08zx]", i );
 
                     for ( j = 0; j < 16 && i + j < size; j++ )
                         printf( " %02X", getUnsafe( i + j ) );
