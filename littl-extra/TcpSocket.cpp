@@ -47,6 +47,7 @@ namespace li
             bool headerReceived;
             int32_t messageLength;
 
+            int getSocketErrno();
             void setActuallyBlocking( bool blocking );
             void updateSocket();
 
@@ -69,7 +70,7 @@ namespace li
             virtual std::unique_ptr<TcpSocket> accept( bool block ) override;
 
             virtual bool connect( const char* host, uint16_t port, bool block ) override;
-            virtual bool connectFinished( bool &success ) override;
+            virtual bool connectFinished( bool &success, int* errno_out ) override;
             virtual void disconnect() override;
 
             virtual bool read( void* output, size_t length, Timeout timeout, bool peek ) override;
@@ -225,7 +226,7 @@ namespace li
         return true;
     }
 
-    bool TcpSocketImpl::connectFinished( bool &success )
+    bool TcpSocketImpl::connectFinished( bool &success, int* errno_out )
     {
         if ( state != connecting )
         {
@@ -243,7 +244,7 @@ namespace li
         FD_ZERO( &exceptfds );
         FD_SET( sock, &exceptfds );
 
-        int res = select( 0, 0, &writefds, &exceptfds, &zeroTime );
+        int res = select( sock + 1, 0, &writefds, &exceptfds, &zeroTime );
 
         if ( res == 0 )
             return false;
@@ -251,20 +252,34 @@ namespace li
         {
             disconnect();
             success = false;
+            if ( errno_out ) *errno_out = getSocketErrno();
             return true;
         }
 
         if ( FD_ISSET( sock, &writefds ) )
         {
-            state = connected;
-            success = true;
+            auto err = getSocketErrno();
+
+            if ( err == 0 ) {
+                state = connected;
+                success = true;
+            }
+            else {
+                // on Linux, failed connect will manifest as writable socket, but with an error set
+                disconnect();
+                success = false;
+            }
+
+            if ( errno_out ) *errno_out = err;
             return true;
         }
 
+        // on Windows, a connection error puts the socket in exception state (TODO: verify)
         if ( FD_ISSET( sock, &exceptfds ) )
         {
             disconnect();
             success = false;
+            if ( errno_out ) *errno_out = getSocketErrno();
             return true;
         }
 
@@ -298,6 +313,14 @@ namespace li
 
         // This won't work with IPv6, obviously
         return inet_ntoa( peer.sin_addr );
+    }
+
+    int TcpSocketImpl::getSocketErrno()
+    {
+        int err;
+        socklen_t len = sizeof( err );
+        getsockopt( sock, SOL_SOCKET, SO_ERROR, &err, &len );
+        return err;
     }
 
     /*bool TcpSocketImpl::isReadable()
