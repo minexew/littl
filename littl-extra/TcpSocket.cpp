@@ -25,6 +25,8 @@
 
 #include <littl/TcpSocket.hpp>
 
+#include <string>
+
 namespace li
 {
     class TcpSocketImpl : public TcpSocket
@@ -71,6 +73,7 @@ namespace li
 
             virtual bool connect( const char* host, uint16_t port, bool block ) override;
             virtual bool connectFinished( bool &success, int* errno_out ) override;
+            std::optional<SystemError> connectFinished2() override;
             virtual void disconnect() override;
 
             virtual bool read( void* output, size_t length, Timeout timeout, bool peek ) override;
@@ -284,6 +287,21 @@ namespace li
         }
 
         return false;
+    }
+
+    std::optional<SystemError> TcpSocketImpl::connectFinished2()
+    {
+        bool result;
+        int err;
+
+        if ( connectFinished( result, &err ) )
+        {
+            return SystemError { strerror(err), err };
+        }
+        else
+        {
+            return std::nullopt;
+        }
     }
 
     void TcpSocketImpl::disconnect()

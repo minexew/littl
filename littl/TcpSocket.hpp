@@ -25,8 +25,16 @@
 
 #include <littl/Stream.hpp>
 
+#include <optional>
+
 namespace li
 {
+    struct SystemError
+    {
+        std::string message;
+        int errno_;
+    };
+
     class TcpSocket : public IOStream
     {
         public:
@@ -53,6 +61,7 @@ namespace li
 
             virtual bool connect( const char* host, uint16_t port, bool block ) = 0;
             virtual bool connectFinished( bool &success, int* errno_out ) = 0;
+            virtual std::optional<SystemError> connectFinished2() = 0;
             virtual void disconnect() = 0;
 
             // Safe receive

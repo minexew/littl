@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 project(littl)
 
-set(CMAKE_CXX_STANDARD 14)
 set(library ${PROJECT_NAME})
 
 # Also add headers so that they're included in generated projects
@@ -18,6 +17,7 @@ add_library(${library} ${sources})
 
 target_include_directories(${library} PUBLIC ${PROJECT_SOURCE_DIR})
 target_compile_definitions(${library} PUBLIC __STDC_FORMAT_MACROS=1)
+target_compile_features(${library} PUBLIC cxx_std_17)
 
 if (WIN32)
 	target_compile_definitions(${library} PUBLIC -D_CRT_SECURE_NO_WARNINGS=1)
