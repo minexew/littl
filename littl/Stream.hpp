@@ -552,6 +552,16 @@ namespace li
         return read(value, sizeof(*value)) == sizeof(*value);
     }
 
+    template<> inline bool InputStream::readLE<float>(float* value)
+    {
+        return read(value, sizeof(*value)) == sizeof(*value);
+    }
+
+    template<> inline bool InputStream::readLE<double>(double* value)
+    {
+        return read(value, sizeof(*value)) == sizeof(*value);
+    }
+
     template<> inline bool OutputStream::writeLE<uint8_t>(uint8_t value)
     {
         return write(&value, sizeof(value)) == sizeof(value);
@@ -588,6 +598,16 @@ namespace li
     }
 
     template<> inline bool OutputStream::writeLE<int64_t>(int64_t value)
+    {
+        return write(&value, sizeof(value)) == sizeof(value);
+    }
+
+    template<> inline bool OutputStream::writeLE<float>(float value)
+    {
+        return write(&value, sizeof(value)) == sizeof(value);
+    }
+
+    template<> inline bool OutputStream::writeLE<double>(double value)
     {
         return write(&value, sizeof(value)) == sizeof(value);
     }
