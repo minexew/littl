@@ -26,6 +26,7 @@
 #include <littl/Stream.hpp>
 
 #include <optional>
+#include <string>
 
 namespace li
 {
