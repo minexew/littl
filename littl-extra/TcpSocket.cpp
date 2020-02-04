@@ -337,7 +337,8 @@ namespace li
     {
         int err;
         socklen_t len = sizeof( err );
-        getsockopt( sock, SOL_SOCKET, SO_ERROR, &err, &len );
+        // Windows specifically requires argument 4 to be of type char*
+        getsockopt( sock, SOL_SOCKET, SO_ERROR, reinterpret_cast<char*>( &err ), &len );
         return err;
     }
 
