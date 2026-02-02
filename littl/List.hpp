@@ -90,8 +90,16 @@ namespace li
             };
 
             template <typename TT, typename This>
-            class generic_iterator : public std::iterator<std::input_iterator_tag, TT>
+            class generic_iterator
             {
+            public:
+                using iterator_category = std::input_iterator_tag;
+                using value_type = TT;
+                using difference_type = std::ptrdiff_t;
+                using pointer = TT*;
+                using reference = TT&;
+
+            private:
                 This& list;
                 intptr_t i;
 
