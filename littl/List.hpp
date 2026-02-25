@@ -120,6 +120,34 @@ namespace li
             typedef generic_iterator<const T, const li_this> const_iterator;
             typedef generic_iterator<T, li_this> iterator;
 
+            template <typename TT, typename This>
+            class generic_reverse_iterator
+            {
+            public:
+                using iterator_category = std::input_iterator_tag;
+                using value_type = TT;
+                using difference_type = std::ptrdiff_t;
+                using pointer = TT*;
+                using reference = TT&;
+
+            private:
+                This& list;
+                intptr_t i;
+
+            public:
+                generic_reverse_iterator(This& list, intptr_t i) : list(list), i(i) {}
+
+                TT* operator -> () { return list.getPtrUnsafe(i); }
+                TT& operator * () { return list.getUnsafe(i); }
+                void operator ++() { i--; }
+
+                bool operator == (const generic_reverse_iterator<TT, This>& other) const { return &list == &other.list && i == other.i; }
+                bool operator != (const generic_reverse_iterator<TT, This>& other) const { return &list != &other.list || i != other.i; }
+            };
+
+            typedef generic_reverse_iterator<const T, const li_this> const_reverse_iterator;
+            typedef generic_reverse_iterator<T, li_this> reverse_iterator;
+
         public:
             List( TLength initialCapacity = 0 )
                 : li_base( initialCapacity ), length( 0 )
@@ -375,6 +403,26 @@ namespace li
             const iterator end()
             {
                 return iterator( *this, getLength() );
+            }
+
+            const const_reverse_iterator rbegin() const
+            {
+                return const_reverse_iterator( *this, static_cast<intptr_t>( getLength() ) - 1 );
+            }
+
+            const const_reverse_iterator rend() const
+            {
+                return const_reverse_iterator( *this, -1 );
+            }
+
+            const reverse_iterator rbegin()
+            {
+                return reverse_iterator( *this, static_cast<intptr_t>( getLength() ) - 1 );
+            }
+
+            const reverse_iterator rend()
+            {
+                return reverse_iterator( *this, -1 );
             }
     };
 
