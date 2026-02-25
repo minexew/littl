@@ -24,6 +24,7 @@
 
 #include <littl/Base.hpp>
 
+#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <memory>
