@@ -59,7 +59,7 @@ namespace li
                 GetFullPathNameA( path, sizeof( fullPath ), fullPath, NULL );
 
                 return String( fullPath );
-#elif !defined(_3DS)
+#elif !defined(__3DS__)
                 char* realPath = realpath( path, nullptr );
                 String absolutePath( realPath );
 

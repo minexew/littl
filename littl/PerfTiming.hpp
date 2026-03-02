@@ -31,7 +31,7 @@
 #endif
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#elif defined(_3DS)
+#elif defined(__3DS__)
 #include <3ds.h>
 #else
 #include <sys/time.h>
@@ -88,7 +88,7 @@ namespace li
 
             Counter getCurrentMicros()
             {
-#ifndef _3DS
+#ifndef __3DS__
                 struct timeval tv;
                 gettimeofday( &tv, nullptr );
 
@@ -100,7 +100,7 @@ namespace li
 
             Counter getCurrentMillis()
             {
-#ifndef _3DS
+#ifndef __3DS__
                 struct timeval tv;
                 gettimeofday( &tv, nullptr );
 

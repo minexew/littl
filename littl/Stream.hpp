@@ -35,7 +35,7 @@
 #endif
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#elif defined(_3DS)
+#elif defined(__3DS__)
 #include <3ds.h>
 #else
 #include <unistd.h>
@@ -50,7 +50,7 @@ namespace li
     {
 #ifdef li_MSW
         Sleep(milliSeconds);
-#elif defined(_3DS)
+#elif defined(__3DS__)
         svcSleepThread(milliSeconds * 1000000L);
 #else
         usleep(milliSeconds * 1000);
