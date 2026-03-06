@@ -5,7 +5,6 @@ set(library ${PROJECT_NAME})
 
 # Also add headers so that they're included in generated projects
 file(GLOB sources
-    ${PROJECT_SOURCE_DIR}/littl-extra/*.cpp
     ${PROJECT_SOURCE_DIR}/src/bleb/*.hpp
 
     ${PROJECT_SOURCE_DIR}/littl/*.hpp
@@ -13,7 +12,12 @@ file(GLOB sources
     ${PROJECT_SOURCE_DIR}/littl+reflector/*.hpp
 )
 
-add_library(${library} ${sources})
+if (NOT NINTENDO_3DS)
+    file(GLOB sources ${sources}
+        ${PROJECT_SOURCE_DIR}/littl-extra/*.cpp)
+endif()
+
+add_library(${library} OBJECT ${sources})
 
 target_include_directories(${library} PUBLIC ${PROJECT_SOURCE_DIR})
 target_compile_definitions(${library} PUBLIC __STDC_FORMAT_MACROS=1)
